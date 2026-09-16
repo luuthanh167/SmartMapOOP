@@ -52,5 +52,4 @@ public class Preference
     {
         return budget;
     }
-    if (!types.Contains(type))
 }
