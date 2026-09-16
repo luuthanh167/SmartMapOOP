@@ -1,0 +1,9 @@
+public enum DestinationType
+{
+    FOOD,
+    COFFEE,
+    STUDY,
+    SHOPPING,
+    RELAX,
+    ENTERTAIMENT,
+}
