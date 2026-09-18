@@ -5,5 +5,5 @@ public enum DestinationType
     STUDY,
     SHOPPING,
     RELAX,
-    ENTERTAIMENT,
+    ENTERTAINMENT,
 }
