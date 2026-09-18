@@ -1,3 +1,5 @@
+namespace SmartMap.Models;
+
 public enum DestinationType
 {
     FOOD,
