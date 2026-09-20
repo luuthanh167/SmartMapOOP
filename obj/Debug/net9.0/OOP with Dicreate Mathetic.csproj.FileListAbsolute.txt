@@ -1,0 +1,15 @@
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.exe
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.deps.json
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.runtimeconfig.json
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.dll
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.pdb
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.GeneratedMSBuildEditorConfig.editorconfig
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.AssemblyInfoInputs.cache
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.AssemblyInfo.cs
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.csproj.CoreCompileInputs.cache
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.sourcelink.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.dll
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\refint\OOP with Dicreate Mathetic.dll
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.pdb
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.genruntimeconfig.cache
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\ref\OOP with Dicreate Mathetic.dll
