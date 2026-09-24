@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Smart Map - Results</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"
+    />
+
+    <link rel="stylesheet" href="secondPage.css" />
+  </head>
+
+  <body>
+    <div class="page">
+      <div class="map-section">
+        <div class="map-title">🗺️ SMART MAP</div>
+
+        <div id="map"></div>
+
+        <div id="mapLoading" class="map-loading">
+          Select a place to find the shortest route
+        </div>
+      </div>
+
+      <div class="results-section">
+        <div class="results-header">
+          <div>
+            <div class="results-title">Places Near You</div>
+            <div id="searchInfo" class="search-info"></div>
+          </div>
+
+          <button id="backButton" class="back-button">BACK</button>
+        </div>
+
+        <div id="placesList" class="places-list">
+          <div class="place-card" data-place-name="Local Food Restaurant">
+            <div class="place-icon">🍜</div>
+
+            <div class="place-info">
+              <div class="place-name">Local Food Restaurant</div>
+
+              <div class="place-details">500 m • 50.000 VND</div>
+
+              <div class="place-rating">⭐ 4.5</div>
+            </div>
+
+            <button class="view-button">VIEW</button>
+          </div>
+
+          <div class="place-card" data-place-name="Coffee House">
+            <div class="place-icon">☕</div>
+
+            <div class="place-info">
+              <div class="place-name">Coffee House</div>
+
+              <div class="place-details">1.2 km • 35.000 VND</div>
+
+              <div class="place-rating">⭐ 4.3</div>
+            </div>
+
+            <button class="view-button">VIEW</button>
+          </div>
+
+          <div class="place-card" data-place-name="Entertainment Place">
+            <div class="place-icon">🎮</div>
+
+            <div class="place-info">
+              <div class="place-name">Entertainment Place</div>
+
+              <div class="place-details">1.8 km • 70.000 VND</div>
+
+              <div class="place-rating">⭐ 4.2</div>
+            </div>
+
+            <button class="view-button">VIEW</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+    <script src="secondPage.js"></script>
+  </body>
+</html>
