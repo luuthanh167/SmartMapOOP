@@ -5,10 +5,10 @@ namespace SmartMap.Graph;
 
 public class RouteOptimizer
 {
-    private Graph graph;
+    private SmartMap.Graph.Graph graph;
     private PathFinder pathFinder;
 
-    public RouteOptimizer(Graph graph)
+    public RouteOptimizer(SmartMap.Graph.Graph graph)
     {
         this.graph = graph;
         this.pathFinder = new PathFinder(graph);
