@@ -2,81 +2,124 @@
 using System.Collections.Generic;
 using SmartMap.Models;
 using SmartMap.Graph;
+using SmartMap.Service;
 
 class Program
 {
-    static void Main()
+    static async Task Main()
     {
+        // ==========================================
         // 1. Tạo User
+        // ==========================================
+
         User user = new User("Thanh");
 
-        // 2. Tạo vị trí hiện tại của User
-        Position currentPosition = new Position(0, 0);
+        Position currentPosition = new Position(
+            10.8498,
+            106.7713
+        );
+
         user.SetCurrentPosition(currentPosition);
 
-        // 3. Tạo một vài địa điểm
-        Location food = new Location(
-            1,
-            "Quan Com",
-            "123 ABC",
-            new Position(1, 1),
-            DestinationType.FOOD,
-            50000,
-            "food001"
+
+        // ==========================================
+        // 2. Lấy địa điểm thật từ OpenStreetMap
+        // ==========================================
+
+        PlaceService placeService = new PlaceService();
+
+        List<Location> places = await placeService.SearchPlaces(
+            10.8498,
+            106.7713,
+            2000,
+            DestinationType.COFFEE
         );
 
-        Location coffee = new Location(
-            2,
-            "Coffee Shop",
-            "456 DEF",
-            new Position(2, 2),
-            DestinationType.COFFEE,
-            30000,
-            "coffee001"
-        );
 
-        Location shopping = new Location(
-            3,
-            "Shopping Mall",
-            "789 GHI",
-            new Position(3, 3),
-            DestinationType.SHOPPING,
-            100000,
-            "shop001"
-        );
+        // ==========================================
+        // 3. In các địa điểm tìm được
+        // ==========================================
 
-        // 4. Tạo Graph
-        Graph graph = new Graph();
+        Console.WriteLine("=== REAL PLACES ===");
 
-        graph.AddLocation(food);
-        graph.AddLocation(coffee);
-        graph.AddLocation(shopping);
-
-        // 5. Tạo đường đi giữa các địa điểm
-        graph.AddEdge(1, 2, 2);
-        graph.AddEdge(2, 3, 3);
-        graph.AddEdge(1, 3, 5);
-
-        // 6. Tạo RouteOptimizer
-        RouteOptimizer optimizer = new RouteOptimizer(graph);
-
-        // 7. Tìm đường từ Food -> Shopping
-        List<int> destinations = new List<int> { 3 };
-
-        RouteResult result = optimizer.FindOptimalRoute(1, destinations);
-
-        // 8. In kết quả
-        Console.WriteLine("=== SMARTMAP ===");
-        Console.WriteLine("User: " + user.GetName());
-
-        Console.WriteLine("Route:");
-
-        foreach (int id in result.GetFullPath())
+        foreach (Location location in places)
         {
-            Location location = graph.GetLocation(id);
-            Console.WriteLine("- " + location.GetName());
+            Console.WriteLine(
+                location.GetId()
+                + " - "
+                + location.GetName()
+                + " - "
+                + location.GetPosition().GetLatitude()
+                + ", "
+                + location.GetPosition().GetLongitude()
+            );
         }
 
-        Console.WriteLine("Total distance: " + result.GetTotalDistance());
+
+        // ==========================================
+        // 4. Tạo Graph
+        // ==========================================
+
+        Graph graph = new Graph();
+
+        foreach (Location location in places)
+        {
+            graph.AddLocation(location);
+        }
+
+
+        // ==========================================
+        // 5. Tạo Edge bằng khoảng cách
+        // ==========================================
+
+        DistanceService distanceService = new DistanceService();
+
+        for (int i = 0; i < places.Count; i++)
+        {
+            for (int j = i + 1; j < places.Count; j++)
+            {
+                double distance = distanceService.CalculateDistance(
+                    places[i].GetPosition(),
+                    places[j].GetPosition()
+                );
+
+                graph.AddEdge(
+                    places[i].GetId(),
+                    places[j].GetId(),
+                    distance
+                );
+            }
+        }
+
+
+        // ==========================================
+        // 6. Kiểm tra Graph
+        // ==========================================
+
+        Console.WriteLine();
+        Console.WriteLine("=== GRAPH ===");
+
+        foreach (Location location in places)
+        {
+            Console.WriteLine(
+                "Location "
+                + location.GetId()
+                + ": "
+                + location.GetName()
+            );
+
+            List<Edge> neighbors =
+                graph.GetNeighbors(location.GetId());
+
+            foreach (Edge edge in neighbors)
+            {
+                Console.WriteLine(
+                    "  -> Location "
+                    + edge.GetTo()
+                    + " | Distance: "
+                    + edge.GetDistance()
+                );
+            }
+        }
     }
 }
