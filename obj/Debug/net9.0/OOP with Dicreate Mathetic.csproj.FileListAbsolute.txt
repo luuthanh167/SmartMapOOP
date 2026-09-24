@@ -13,3 +13,18 @@ C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\refint\OOP with Dicreate Mathetic
 C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.pdb
 C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.genruntimeconfig.cache
 C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\ref\OOP with Dicreate Mathetic.dll
+g:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.exe
+g:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.deps.json
+g:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.runtimeconfig.json
+g:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.dll
+g:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.pdb
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.GeneratedMSBuildEditorConfig.editorconfig
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.AssemblyInfoInputs.cache
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.AssemblyInfo.cs
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.csproj.CoreCompileInputs.cache
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.sourcelink.json
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.dll
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\refint\OOP with Dicreate Mathetic.dll
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.pdb
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.genruntimeconfig.cache
+g:\2026-2027\SmartMapOOP\obj\Debug\net9.0\ref\OOP with Dicreate Mathetic.dll

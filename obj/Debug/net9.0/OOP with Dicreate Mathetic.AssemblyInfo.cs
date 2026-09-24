@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OOP with Dicreate Mathetic")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+60bb61725ce2c8044b09a87a4b5c95abd5d62e2f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a1d853b692c35e966651c003e747b9d0870bd9cb")]
 [assembly: System.Reflection.AssemblyProductAttribute("OOP with Dicreate Mathetic")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OOP with Dicreate Mathetic")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
