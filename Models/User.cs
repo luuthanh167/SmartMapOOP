@@ -12,6 +12,7 @@ public class User
     {
         this.name = name;
         this.preference = new Preference();
+        this.currentPosition = new Position(0, 0);
     }
 
     public void SetName(string name)

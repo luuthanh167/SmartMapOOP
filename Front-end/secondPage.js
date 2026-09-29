@@ -100,18 +100,20 @@ function drawRoute(routeCoordinates) {
   });
 }
 
-function findRoute(placeName) {
+function findRoute(latitude, longitude, placeName) {
   mapLoading.textContent = "Finding shortest route...";
   mapLoading.style.display = "block";
 
-  fetch("/api/route", {
+  fetch("http://localhost:5000/api/route", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      startName: "Đại học Công nghệ Kỹ thuật TP.HCM",
-      destinationName: placeName,
+      startLatitude: uteLatitude,
+      startLongitude: uteLongitude,
+      destinationLatitude: latitude,
+      destinationLongitude: longitude,
     }),
   })
     .then(function (response) {
@@ -129,42 +131,46 @@ function findRoute(placeName) {
       drawRoute(data.routeCoordinates);
 
       showDestination(
-        data.destination.latitude,
-        data.destination.longitude,
-        placeName,
+        latitude,
+        longitude,
+        placeName
       );
 
       searchInfo.textContent =
         "HCM-UTE → " +
         placeName +
         " • " +
-        Number(data.totalDistance).toFixed(2) +
+        (data.distance / 1000).toFixed(2) +
         " km";
 
       map.fitBounds(
         data.routeCoordinates.map(function (point) {
-          return [point[1], point[0]];
+          return [point[0], point[1]];
         }),
         {
           padding: 60,
-        },
+        }
       );
 
       mapLoading.style.display = "none";
     })
     .catch(function (error) {
       console.log(error);
-
-      mapLoading.textContent = "Cannot find shortest route.";
+      mapLoading.textContent = "Cannot find route.";
     });
 }
 
 document.querySelectorAll(".view-button").forEach(function (button) {
   button.addEventListener("click", function () {
     const card = button.closest(".place-card");
-    const placeName = card.dataset.placeName;
 
-    findRoute(placeName);
+    const placeName = card.dataset.placeName;
+    const latitude = Number(card.dataset.latitude);
+    const longitude = Number(card.dataset.longitude);
+
+    console.log("ROUTE:", placeName, latitude, longitude);
+
+    findRoute(latitude, longitude, placeName);
   });
 });
 

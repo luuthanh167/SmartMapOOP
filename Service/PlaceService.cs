@@ -46,7 +46,14 @@ public class PlaceService
             content
         );
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine(
+                $"Overpass API error: {(int)response.StatusCode} {response.ReasonPhrase}"
+            );
+
+            return new List<Location>();
+        }
 
         string json = await response.Content.ReadAsStringAsync();
 
