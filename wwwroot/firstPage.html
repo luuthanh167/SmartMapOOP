@@ -1,0 +1,81 @@
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Map</title>
+    <link rel="stylesheet" href="firstPage.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="title">🗺️ SMART MAP</div>
+
+      <div class="form-row">
+        <label for="location">Location:</label>
+
+        <div class="location-input-container">
+          <input
+            type="text"
+            id="location"
+            list="locationList"
+            placeholder="Enter your location"
+            autocomplete="off"
+          />
+
+          <datalist id="locationList">
+            <option value="Đại học Công nghệ Kỹ thuật TP.HCM"></option>
+            <option value="Đại học Sư phạm Kỹ thuật TP.HCM"></option>
+            <option value="Vincom Plaza Lê Văn Việt"></option>
+            <option value="Làng Đại học Quốc gia TP.HCM"></option>
+            <option value="Đại học Văn Lang"></option>
+            <option value="Đại học Bách Khoa TP.HCM"></option>
+          </datalist>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="category">I want to:</label>
+
+        <select id="category">
+          <option value="food">Food</option>
+          <option value="coffee">Coffee</option>
+          <option value="entertainment">Entertainment</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="budget">Budget:</label>
+
+        <input
+          type="text"
+          id="budget"
+          placeholder="Enter your budget"
+          oninput="
+            this.value = this.value
+              .replace(/\D/g, '')
+              .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+          "
+        />
+
+        <span>VND</span>
+      </div>
+
+      <div class="form-row">
+        <label for="distance">Max distance:</label>
+
+        <input type="text" id="distance" placeholder="Enter max distance" />
+
+        <span>km</span>
+      </div>
+
+      <div class="button-container">
+        <button type="button" id="findButton">FIND PLACES</button>
+      </div>
+    </div>
+
+    <script src="firstPage.js"></script>
+  </body>
+</html>
+```

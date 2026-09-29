@@ -1,0 +1,145 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  background-color: #f7f5fa;
+}
+
+.container {
+  width: 500px;
+  background-color: white;
+  padding: 35px 40px;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.form-row label {
+  width: 125px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-row input,
+.form-row select {
+  width: 220px;
+  height: 40px;
+  border: none;
+  border-bottom: 1px solid #cfcfcf;
+  outline: none;
+  font-size: 14px;
+  background-color: transparent;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  border-bottom: 2px solid #6c63d9;
+}
+
+.location-input-container {
+  position: relative;
+  width: 220px;
+}
+
+.location-input-container input {
+  width: 220px;
+}
+
+.suggestions {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  width: 220px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.suggestion-item {
+  padding: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #f5f3ff;
+}
+
+.form-row span {
+  margin-left: 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 35px;
+}
+
+#findButton {
+  width: 180px;
+  height: 42px;
+  border: none;
+  border-radius: 22px;
+  background-color: #6c63d9;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: block;
+}
+
+#findButton:hover {
+  background-color: #5a52c7;
+}
+
+@media (max-width: 600px) {
+  .container {
+    width: 90%;
+    padding: 30px 25px;
+  }
+
+  .form-row label {
+    width: 110px;
+  }
+
+  .location-input-container {
+    width: calc(100% - 110px);
+  }
+
+  .form-row input,
+  .form-row select {
+    width: 100%;
+  }
+
+  .location-input-container input {
+    width: 100%;
+  }
+}
