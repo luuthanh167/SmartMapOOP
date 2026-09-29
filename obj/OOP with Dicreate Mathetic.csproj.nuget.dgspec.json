@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj": {}
+    "c:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj": {}
   },
   "projects": {
-    "C:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj": {
+    "c:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj",
+        "projectUniqueName": "c:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj",
         "projectName": "OOP with Dicreate Mathetic",
-        "projectPath": "C:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj",
+        "projectPath": "c:\\OOP with Dicreate Mathetic\\OOP with Dicreate Mathetic.csproj",
         "packagesPath": "C:\\Users\\luuba\\.nuget\\packages\\",
-        "outputPath": "C:\\OOP with Dicreate Mathetic\\obj\\",
+        "outputPath": "c:\\OOP with Dicreate Mathetic\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
