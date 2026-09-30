@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SmartMap.Graph;
 
@@ -21,12 +22,17 @@ public class RouteOptimizer
         // Kiểm tra dữ liệu đầu vào
         if (destinations == null)
         {
-            throw new ArgumentNullException(
-                nameof(destinations));
+            throw new ArgumentNullException(nameof(destinations));
         }
 
-        // Không có destination
-        if (destinations.Count == 0)
+        // Lọc bỏ trùng lặp và loại bỏ chính start nếu vô tình nằm trong destinations
+        List<int> uniqueDestinations = destinations
+            .Where(id => id != start)
+            .Distinct()
+            .ToList();
+
+        // Không có destination nào sau khi lọc
+        if (uniqueDestinations.Count == 0)
         {
             return new RouteResult(
                 new List<int> { start },
@@ -35,26 +41,15 @@ public class RouteOptimizer
             );
         }
 
-        // Kiểm tra destination trùng nhau
-        HashSet<int> uniqueDestinations =
-            new HashSet<int>(destinations);
-
-        if (uniqueDestinations.Count != destinations.Count)
-        {
-            throw new ArgumentException(
-                "Destinations must not contain duplicate locations."
-            );
-        }
-
         // Nếu chỉ có một destination
-        if (destinations.Count == 1)
+        if (uniqueDestinations.Count == 1)
         {
             double distance;
 
             List<int> path =
                 pathFinder.Dijkstra(
                     start,
-                    destinations[0],
+                    uniqueDestinations[0],
                     out distance);
 
             if (path.Count == 0)
@@ -68,23 +63,19 @@ public class RouteOptimizer
 
             return new RouteResult(
                 path,
-                new List<int>(destinations),
+                new List<int>(uniqueDestinations),
                 distance
             );
         }
 
-        //Sinh tất cả thứ tự có thể của các điểm đến
+        // Sinh tất cả thứ tự có thể của các điểm đến
         List<List<int>> permutations =
-            GeneratePermutations(destinations);
+            GeneratePermutations(uniqueDestinations);
 
-        double bestDistance =
-            double.PositiveInfinity;
+        double bestDistance = double.PositiveInfinity;
+        List<int> bestOrder = new List<int>();
 
-        List<int> bestOrder =
-            new List<int>();
-
-
-        //Tính khoảng cách cho từng thứ tự
+        // Tính khoảng cách cho từng thứ tự
         foreach (List<int> order in permutations)
         {
             double currentDistance =
@@ -100,7 +91,7 @@ public class RouteOptimizer
             }
         }
 
-        //Không tìm được route
+        // Không tìm được route
         if (double.IsPositiveInfinity(bestDistance))
         {
             return new RouteResult(
@@ -109,7 +100,8 @@ public class RouteOptimizer
                 double.PositiveInfinity
             );
         }
-        //Xây dựng đường đi đầy đủ
+
+        // Xây dựng đường đi đầy đủ
         List<int> fullPath =
             BuildFullPath(
                 start,
@@ -150,7 +142,6 @@ public class RouteOptimizer
         int index,
         List<List<int>> result)
     {
-        // Đã tạo xong một permutation
         if (index == destinations.Count)
         {
             result.Add(
@@ -164,23 +155,14 @@ public class RouteOptimizer
              i < destinations.Count;
              i++)
         {
-            // Swap
-            Swap(
-                destinations,
-                index,
-                i);
+            Swap(destinations, index, i);
 
-            // Đệ quy
             GeneratePermutationsRecursive(
                 destinations,
                 index + 1,
                 result);
 
-            // Swap lại để khôi phục trạng thái
-            Swap(
-                destinations,
-                index,
-                i);
+            Swap(destinations, index, i);
         }
     }
 
@@ -193,7 +175,6 @@ public class RouteOptimizer
         int second)
     {
         int temp = list[first];
-
         list[first] = list[second];
         list[second] = temp;
     }
@@ -206,7 +187,6 @@ public class RouteOptimizer
         List<int> route)
     {
         double totalDistance = 0;
-
         int current = start;
 
         foreach (int destination in route)
@@ -220,13 +200,12 @@ public class RouteOptimizer
                     out distance);
 
             // Không có đường đi
-            if (path.Count == 0)
+            if (path.Count == 0 || double.IsPositiveInfinity(distance))
             {
                 return double.PositiveInfinity;
             }
 
             totalDistance += distance;
-
             current = destination;
         }
 
@@ -244,8 +223,6 @@ public class RouteOptimizer
             new List<int>();
 
         int current = start;
-
-        // Thêm điểm bắt đầu
         fullPath.Add(start);
 
         foreach (int destination in destinationOrder)
@@ -258,15 +235,12 @@ public class RouteOptimizer
                     destination,
                     out distance);
 
-            // Không có đường đi
             if (path.Count == 0)
             {
                 return new List<int>();
             }
 
-            for (int i = 1;
-                 i < path.Count;
-                 i++)
+            for (int i = 1; i < path.Count; i++)
             {
                 fullPath.Add(path[i]);
             }

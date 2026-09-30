@@ -5,7 +5,7 @@ namespace SmartMap.Models;
 public class User
 {
     private string name;
-    private Position currentPosition;
+    private Position? currentPosition;
     private Preference preference;
 
     public User(string name)
@@ -29,7 +29,7 @@ public class User
         currentPosition = position;
     }
 
-    public Position GetCurrentPosition()
+    public Position? GetCurrentPosition()
     {
         return currentPosition;
     }

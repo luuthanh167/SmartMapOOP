@@ -1,324 +1,133 @@
-﻿using System;
-using System.Collections.Generic;
-using SmartMap.Models;
-using SmartMap.Graph;
+﻿using SmartMap.Models;
 using SmartMap.Service;
 
-class Program
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Đăng ký các dịch vụ (Dependency Injection)
+builder.Services.AddCors(options =>
 {
-    static async Task Main()
+    options.AddDefaultPolicy(policy =>
     {
-        // ==========================================
-        // 1. Tạo User
-        // ==========================================
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
-        User user = new User("Thanh");
+builder.Services.AddSingleton<PlaceService>();
+builder.Services.AddSingleton<RoutingService>();
+builder.Services.AddSingleton<DistanceService>();
 
-        Position currentPosition = new Position(
-            10.8498,
-            106.7713
-        );
+var app = builder.Build();
 
-        user.SetCurrentPosition(currentPosition);
+app.UseCors();
 
+// 2. Cấu hình phục vụ file Web (HTML, CSS, JS) trong thư mục wwwroot
+var defaultFilesOptions = new DefaultFilesOptions();
+defaultFilesOptions.DefaultFileNames.Clear();
+defaultFilesOptions.DefaultFileNames.Add("firstPage.html");
+app.UseDefaultFiles(defaultFilesOptions); // Tự động mở firstPage.html khi vào trang chủ /
+app.UseStaticFiles();                   // Cho phép tải các file tĩnh trong wwwroot
 
-        // ==========================================
-        // 2. Lấy địa điểm thật từ OpenStreetMap
-        // ==========================================
+// 3. API lấy danh sách các địa điểm
+app.MapGet("/api/places", async (
+    string? category,
+    double? lat,
+    double? lon,
+    double? distance,
+    PlaceService placeService) =>
+{
+    double centerLat = lat ?? 10.8498;
+    double centerLon = lon ?? 106.7713;
+    double radiusMeters = (distance ?? 2.0) * 1000.0;
 
-        PlaceService placeService = new PlaceService();
+    DestinationType type = (category?.ToLower()) switch
+    {
+        "food" => DestinationType.FOOD,
+        "coffee" => DestinationType.COFFEE,
+        "shopping" => DestinationType.SHOPPING,
+        "study" => DestinationType.STUDY,
+        "relax" => DestinationType.RELAX,
+        "entertainment" => DestinationType.ENTERTAINMENT,
+        _ => DestinationType.COFFEE
+    };
 
-        List<Location> places = await placeService.SearchPlaces(
-            10.8498,
-            106.7713,
-            2000,
-            DestinationType.COFFEE
-        );
+    var places = await placeService.SearchPlaces(centerLat, centerLon, radiusMeters, type);
 
+    var result = places.Select(p => new
+    {
+        id = p.GetId(),
+        name = p.GetName(),
+        address = p.GetAddress(),
+        latitude = p.GetPosition().GetLatitude(),
+        longitude = p.GetPosition().GetLongitude(),
+        type = p.GetType().ToString(),
+        price = p.GetPrice()
+    });
 
-        // ==========================================
-        // 3. In các địa điểm tìm được
-        // ==========================================
+    return Results.Ok(result);
+});
 
-        Console.WriteLine("=== REAL PLACES ===");
+// 4. API tìm lộ trình đường đi
+app.MapPost("/api/route", async (
+    RouteRequest request,
+    RoutingService routingService,
+    DistanceService distanceService) =>
+{
+    var knownLocations = new Dictionary<string, (double Lat, double Lon)>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Đại học Công nghệ Kỹ thuật TP.HCM"] = (10.8498, 106.7713),
+        ["Đại học Sư phạm Kỹ thuật TP.HCM"] = (10.8506, 106.7719),
+        ["Vincom Plaza Lê Văn Việt"] = (10.8458, 106.7778),
+        ["Làng Đại học Quốc gia TP.HCM"] = (10.8700, 106.8030),
+        ["Đại học Văn Lang"] = (10.8275, 106.6990),
+        ["Đại học Bách Khoa TP.HCM"] = (10.7720, 106.6578),
+        ["Local Food Restaurant"] = (10.8512, 106.7725),
+        ["Coffee House"] = (10.8465, 106.7780),
+        ["Entertainment Place"] = (10.8580, 106.7800)
+    };
 
-        foreach (Location location in places)
+    double startLat = request.StartLat ?? (knownLocations.TryGetValue(request.StartName, out var sPos) ? sPos.Lat : 10.8498);
+    double startLon = request.StartLon ?? (knownLocations.TryGetValue(request.StartName, out sPos) ? sPos.Lon : 106.7713);
+
+    double destLat = request.DestLat ?? (knownLocations.TryGetValue(request.DestinationName, out var dPos) ? dPos.Lat : 10.8465);
+    double destLon = request.DestLon ?? (knownLocations.TryGetValue(request.DestinationName, out dPos) ? dPos.Lon : 106.7780);
+
+    var start = new Position(startLat, startLon);
+    var destination = new Position(destLat, destLon);
+
+    var route = await routingService.GetRoute(start, destination);
+
+    if (route == null)
+    {
+        double directKm = distanceService.CalculateDistance(start, destination);
+        return Results.Ok(new
         {
-            Console.WriteLine(
-                location.GetId()
-                + " - "
-                + location.GetName()
-                + " - "
-                + location.GetPosition().GetLatitude()
-                + ", "
-                + location.GetPosition().GetLongitude()
-            );
-        }
-
-
-        // ==========================================
-        // 4. Tạo Graph
-        // ==========================================
-
-        Graph graph = new Graph();
-
-        foreach (Location location in places)
-        {
-            graph.AddLocation(location);
-        }
-
-
-        // ==========================================
-        // 5. Tạo Edge bằng khoảng cách
-        // ==========================================
-
-        DistanceService distanceService = new DistanceService();
-
-        for (int i = 0; i < places.Count; i++)
-        {
-            for (int j = i + 1; j < places.Count; j++)
+            totalDistance = directKm,
+            duration = directKm * 120.0,
+            routeCoordinates = new List<double[]>
             {
-                double distance = distanceService.CalculateDistance(
-                    places[i].GetPosition(),
-                    places[j].GetPosition()
-                );
-
-                graph.AddEdge(
-                    places[i].GetId(),
-                    places[j].GetId(),
-                    distance
-                );
-            }
-        }
-
-
-        // ==========================================
-        // 6. Kiểm tra Graph
-        // ==========================================
-
-        Console.WriteLine();
-        Console.WriteLine("=== GRAPH ===");
-
-        foreach (Location location in places)
-        {
-            Console.WriteLine(
-                "Location "
-                + location.GetId()
-                + ": "
-                + location.GetName()
-            );
-
-            List<Edge> neighbors =
-                graph.GetNeighbors(location.GetId());
-
-            foreach (Edge edge in neighbors)
-            {
-                Console.WriteLine(
-                    "  -> Location "
-                    + edge.GetTo()
-                    + " | Distance: "
-                    + edge.GetDistance()
-                );
-            }
-        }
-        
-        PathFinder pathFinder = new PathFinder(graph);
-        // double totalDistance;
-        // List <int> path = pathFinder.Dijkstra(1, 9, out totalDistance);
-        // Console.WriteLine();
-        // Console.WriteLine("===Dijkstra Test===");
-        // Console.WriteLine("Path: " + string.Join("->", path));
-        // Console.WriteLine("Total distance: " + totalDistance.ToString("F2") + "km");
-
-        // ==========================================
-        // 7. User chọn các địa điểm
-        // ==========================================
-
-        Console.WriteLine();
-        Console.WriteLine("===CHOOSE START LOCATION==="); //chọn địa điểm bắt đầu
-        Console.WriteLine("> ");
-        string? startInput = Console.ReadLine();
-        if (!int.TryParse(startInput, out int startId))
-        {
-            Console.WriteLine("Invalid start location");
-            return;
-        }
-
-        Location? startLocation = places.Find(x => x.GetId() == startId);
-
-        if (startLocation == null)
-        {
-            Console.WriteLine("Start location not found");
-            return;
-        }
-        Console.WriteLine();
-        Console.WriteLine("=== CHOOSE DESTINATIONS==="); //chọn những địa điểm muốn đến
-        Console.WriteLine("Enter destination IDs separated by spaces:");
-        Console.Write("> ");
-
-        string? input = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            Console.WriteLine("No locations selected.");
-            return;
-        }
-
-        string[] inputIds = input.Split(
-            ' ',
-            StringSplitOptions.RemoveEmptyEntries
-        );
-
-        List<Location> selectedPlaces = new List<Location>();
-
-        foreach (string idText in inputIds)
-        {
-            if (int.TryParse(idText, out int id))
-            {
-                Location? location = places.Find(
-                    x => x.GetId() == id
-                );
-
-                if (location != null &&
-                    !selectedPlaces.Contains(location))
-                {
-                    selectedPlaces.Add(location);
-                }
-            }
-        }
-
-        // ==========================================
-        // 9. In các địa điểm user đã chọn
-        // ==========================================
-        Console.WriteLine();
-        Console.WriteLine("===START LOCATIONS===");
-        Console.WriteLine(startLocation.GetId() + " - " + startLocation.GetName());
-        Console.WriteLine();
-        Console.WriteLine("=== SELECTED DESTINATIONS ===");
-
-        foreach (Location location in selectedPlaces)
-        {
-            Console.WriteLine(
-                location.GetId()
-                + " - "
-                + location.GetName()
-            );
-        }
-        // // ==========================================
-        // // 10. Tìm đường đi ngắn nhất qua các địa điểm
-        // // ==========================================
-
-        // if (selectedPlaces.Count >= 2)
-        // {
-        //     Console.WriteLine();
-        //     Console.WriteLine("=== SHORTEST ROUTE ===");
-
-        //     double totalRouteDistance = 0;
-
-        //     int currentLocation =
-        //         selectedPlaces[0].GetId();
-
-        //     Console.WriteLine(
-        //         "Start: "
-        //         + selectedPlaces[0].GetName()
-        //     );
-
-        //     for (int i = 1; i < selectedPlaces.Count; i++)
-        //     {
-        //         int nextLocation =
-        //             selectedPlaces[i].GetId();
-
-        //         double distance;
-
-        //         List<int> path =
-        //             pathFinder.Dijkstra(
-        //                 currentLocation,
-        //                 nextLocation,
-        //                 out distance
-        //             );
-
-        //         if (path.Count == 0)
-        //         {
-        //             Console.WriteLine(
-        //                 "No path found from "
-        //                 + currentLocation
-        //                 + " to "
-        //                 + nextLocation
-        //             );
-
-        //             return;
-        //         }
-
-        //         Console.WriteLine();
-        //         Console.WriteLine(
-        //             "From "
-        //             + currentLocation
-        //             + " to "
-        //             + nextLocation
-        //         );
-
-        //         Console.Write("Path: ");
-
-        //         foreach (int id in path)
-        //         {
-        //             Console.Write(id + " ");
-        //         }
-
-        //         Console.WriteLine();
-        //         Console.WriteLine(
-        //             "Distance: "
-        //             + distance
-        //             + " km"
-        //         );
-
-        //         totalRouteDistance += distance;
-
-        //         currentLocation = nextLocation;
-        //     }
-
-        //     Console.WriteLine();
-        //     Console.WriteLine(
-        //         "Total Route Distance: "
-        //         + totalRouteDistance
-        //         + " km"
-        //     );
-        // }
-        // ==========================================
-        // 10. Tối ưu thứ tự các địa điểm (in ra thứ tự đi cùng với khoảng cách tối ưu)
-        // ==========================================
-
-        List<int> selectedIds = new List<int>();
-
-        foreach (Location location in selectedPlaces)
-        {
-            selectedIds.Add(location.GetId());
-        }
-
-        RouteOptimizer routeOptimizer =
-            new RouteOptimizer(graph);
-
-        RouteResult routeResult =
-            routeOptimizer.FindOptimalRoute(
-                selectedIds[0],
-                selectedIds
-            );
-
-        Console.WriteLine();
-        Console.WriteLine("=== OPTIMAL ROUTE ===");
-
-        Console.WriteLine("Best Order:");
-
-        foreach (int id in routeResult.GetDestinationOrder())
-        {
-            Console.Write(id + " ");
-        }
-
-        Console.WriteLine();
-
-        Console.WriteLine(
-            "Minimum Distance: "
-            + routeResult.GetTotalDistance()
-            + " km"
-        );
+                new double[] { startLon, startLat },
+                new double[] { destLon, destLat }
+            },
+            destination = new { latitude = destLat, longitude = destLon }
+        });
     }
-}
+
+    return Results.Ok(new
+    {
+        totalDistance = route.Distance / 1000.0,
+        duration = route.Duration,
+        routeCoordinates = route.RouteCoordinates,
+        destination = new { latitude = destLat, longitude = destLon }
+    });
+});
+
+Console.WriteLine();
+Console.WriteLine("=================================================");
+Console.WriteLine(" Web SmartMap đang chạy tại: http://localhost:5000");
+Console.WriteLine(" Mở trình duyệt và truy cập: http://localhost:5000");
+Console.WriteLine("=================================================");
+Console.WriteLine();
+
+app.Run("http://localhost:5000");

@@ -18,12 +18,20 @@ locationInput.addEventListener("input", function () {
   locationSuggestions.innerHTML = "";
 
   if (text === "") {
+    locationSuggestions.style.display = "none";
     return;
   }
 
   const results = locations.filter(function (location) {
     return location.toLowerCase().includes(text);
   });
+
+  if (results.length === 0) {
+    locationSuggestions.style.display = "none";
+    return;
+  }
+
+  locationSuggestions.style.display = "block";
 
   results.forEach(function (location) {
     const item = document.createElement("div");
@@ -34,10 +42,17 @@ locationInput.addEventListener("input", function () {
     item.addEventListener("click", function () {
       locationInput.value = location;
       locationSuggestions.innerHTML = "";
+      locationSuggestions.style.display = "none";
     });
 
     locationSuggestions.appendChild(item);
   });
+});
+
+document.addEventListener("click", function (e) {
+  if (!locationInput.contains(e.target) && !locationSuggestions.contains(e.target)) {
+    locationSuggestions.style.display = "none";
+  }
 });
 
 budgetInput.addEventListener("focus", function () {

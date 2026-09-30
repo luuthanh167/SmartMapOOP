@@ -28,3 +28,21 @@ D:\SmartMapOOP\obj\Debug\net9.0\refint\OOP with Dicreate Mathetic.dll
 D:\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.pdb
 D:\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.genruntimeconfig.cache
 D:\SmartMapOOP\obj\Debug\net9.0\ref\OOP with Dicreate Mathetic.dll
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.staticwebassets.runtime.json
+C:\OOP with Dicreate Mathetic\bin\Debug\net9.0\OOP with Dicreate Mathetic.staticwebassets.endpoints.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\rpswa.dswa.cache.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\OOP with Dicreate Mathetic.MvcApplicationPartsAssemblyInfo.cache
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\rjimswa.dswa.cache.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\scopedcss\bundle\OOP with Dicreate Mathetic.styles.css
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\o5borcmzgp-pro9f4pvw1.gz
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\staticwebassets.build.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\staticwebassets.build.json.cache
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\staticwebassets.development.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\staticwebassets.build.endpoints.json
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\l71t708i4p-niah2lrvv2.gz
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\9cmnr01rv8-4mswofp95i.gz
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\j86nvx9iee-mn99z5t3i6.gz
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\umzweigmnt-9ey3dpf7f4.gz
+C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\3al6r435oq-b3v1ch7jei.gz

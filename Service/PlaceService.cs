@@ -46,7 +46,11 @@ public class PlaceService
             content
         );
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"API Error: {(int)response.StatusCode} {response.ReasonPhrase}");
+            return new List<Location>();
+        }
 
         string json = await response.Content.ReadAsStringAsync();
 

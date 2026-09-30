@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using SmartMap.Models;
-using SmartMap.Graph;
+
 namespace SmartMap.Graph;
+
 public class Graph
 {
     private Dictionary<int, Location> locations;
@@ -27,6 +28,11 @@ public class Graph
 
     public void AddEdge(int from, int to, double distance)
     {
+        if (!adjacencyList.ContainsKey(from) || !adjacencyList.ContainsKey(to))
+        {
+            return;
+        }
+
         adjacencyList[from].Add(
             new Edge(to, distance)
         );
@@ -38,12 +44,16 @@ public class Graph
 
     public List<Edge> GetNeighbors(int locationId)
     {
-        return adjacencyList[locationId];
+        if (adjacencyList.TryGetValue(locationId, out var neighbors))
+        {
+            return neighbors;
+        }
+        return new List<Edge>();
     }
 
-    public Location GetLocation(int id)
+    public Location? GetLocation(int id)
     {
-        return locations[id];
+        return locations.TryGetValue(id, out var loc) ? loc : null;
     }
 
     public List<Location> GetLocations()
@@ -53,7 +63,12 @@ public class Graph
 
     public double GetDistance(int from, int to)
     {
-        foreach (var edge in adjacencyList[from])
+        if (!adjacencyList.TryGetValue(from, out var edges))
+        {
+            return double.PositiveInfinity;
+        }
+
+        foreach (var edge in edges)
         {
             if (edge.GetTo() == to)
             {

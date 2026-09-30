@@ -50,7 +50,7 @@ public class Location
         return position;
     }
 
-    public DestinationType GetType()
+    public new DestinationType GetType()
     {
         return type;
     }

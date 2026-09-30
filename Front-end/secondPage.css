@@ -1,0 +1,595 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8f9fa;
+  overflow: hidden;
+  color: #202124;
+}
+
+.page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   1. MAP SECTION & FLOATING CONTROLS
+   ========================================================================== */
+.map-section {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: #e5e3df;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Top Floating Nav Bar (Google Maps style) */
+.top-nav-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  max-width: 820px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  border-radius: 28px;
+  padding: 8px 18px 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  transition: all 0.25s ease;
+}
+
+.back-btn {
+  border: none;
+  background: #f1f3f4;
+  color: #3c4043;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background: #e8eaed;
+}
+
+.back-icon {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.search-summary {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #202124;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-sub {
+  font-size: 12px;
+  color: #5f6368;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.places-count-badge {
+  background: #e8f0fe;
+  color: #1a73e8;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Floating Route Info Banner */
+.route-banner {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a73e8;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(26, 115, 232, 0.4);
+  z-index: 10;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.route-banner-icon {
+  font-size: 22px;
+}
+
+.route-banner-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.route-banner-details {
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+.close-banner-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.close-banner-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Recenter Button */
+.recenter-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 42px;
+  height: 42px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3c4043;
+  cursor: pointer;
+  z-index: 8;
+  transition: all 0.2s;
+}
+
+.recenter-btn:hover {
+  background: #f8f9fa;
+  transform: scale(1.05);
+}
+
+/* Loading Overlay */
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 14px 22px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #202124;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #e8eaed;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   2. GOOGLE MAPS STYLE CUSTOM MARKERS & LABELS
+   ========================================================================== */
+
+/* Destination Marker Container */
+.custom-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2;
+  user-select: none;
+}
+
+.custom-marker:hover {
+  transform: scale(1.15);
+  z-index: 50 !important;
+}
+
+.custom-marker.active {
+  transform: scale(1.22);
+  z-index: 60 !important;
+}
+
+/* Pin (Teardrop shape) */
+.marker-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50% 50% 50% 0;
+  background: linear-gradient(135deg, #ea4335, #c5221f);
+  position: relative;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(234, 67, 53, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 2px solid #ffffff;
+  transition: all 0.25s ease;
+}
+
+.custom-marker.active .marker-pin {
+  background: linear-gradient(135deg, #1a73e8, #1557b0);
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.marker-icon {
+  transform: rotate(45deg);
+  font-size: 17px;
+  display: block;
+  line-height: 1;
+}
+
+/* Place Name Label below Pin */
+.marker-label {
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #202124;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.custom-marker:hover .marker-label {
+  max-width: 220px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.custom-marker.active .marker-label {
+  background: #1a73e8;
+  color: #ffffff;
+  border-color: #1a73e8;
+  box-shadow: 0 3px 10px rgba(26, 115, 232, 0.4);
+}
+
+/* User Start Location Marker (Google Blue Pulsing Dot) */
+.user-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 15;
+  user-select: none;
+}
+
+.user-marker-ring {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-marker-pulse {
+  width: 100%;
+  height: 100%;
+  background: rgba(26, 115, 232, 0.3);
+  border-radius: 50%;
+  position: absolute;
+  animation: user-pulse 2s infinite ease-out;
+}
+
+.user-marker-dot {
+  width: 18px;
+  height: 18px;
+  background: #1a73e8;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.user-marker-label {
+  margin-top: 4px;
+  background: #1a73e8;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.4);
+  white-space: nowrap;
+}
+
+@keyframes user-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   3. BOTTOM RESULTS & PLACES LIST
+   ========================================================================== */
+.results-section {
+  height: 240px;
+  background-color: #ffffff;
+  padding: 14px 24px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.results-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #202124;
+}
+
+.results-subtitle {
+  font-size: 12px;
+  color: #5f6368;
+  margin-top: 2px;
+}
+
+.route-button {
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.35);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.route-button:hover:not(:disabled) {
+  background: #1557b0;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.5);
+  transform: translateY(-1px);
+}
+
+.route-button:disabled {
+  background: #dadce0;
+  color: #80868b;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.route-btn-icon {
+  font-size: 14px;
+}
+
+/* Places List (Horizontal Slider) */
+.places-list {
+  flex: 1;
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+}
+
+.places-list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.places-list::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 4px;
+}
+
+.places-list::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 4px;
+}
+
+.places-list::-webkit-scrollbar-thumb:hover {
+  background: #bdc1c6;
+}
+
+/* Place Card */
+.place-card {
+  min-width: 270px;
+  max-width: 270px;
+  background: #ffffff;
+  border: 1.5px solid #e8eaed;
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.place-card:hover {
+  border-color: #1a73e8;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(26, 115, 232, 0.14);
+}
+
+.place-card.selected {
+  border-color: #1a73e8;
+  background: #f8fafd;
+  box-shadow: 0 4px 16px rgba(26, 115, 232, 0.22);
+  transform: translateY(-2px);
+}
+
+.place-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f1f3f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.place-card.selected .place-icon {
+  background: #e8f0fe;
+}
+
+.place-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #202124;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.place-details {
+  font-size: 12px;
+  color: #5f6368;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.place-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.place-rating {
+  color: #e37400;
+  font-weight: 700;
+}
+
+.place-distance {
+  color: #1a73e8;
+  background: #e8f0fe;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  color: #5f6368;
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   4. RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 768px) {
+  .top-nav-bar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 6px 12px;
+  }
+
+  .results-section {
+    height: 220px;
+    padding: 10px 16px;
+  }
+
+  .place-card {
+    min-width: 240px;
+    max-width: 240px;
+  }
+}
