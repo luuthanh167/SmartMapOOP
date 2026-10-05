@@ -39,6 +39,7 @@
           <div class="route-banner-content">
             <div class="route-banner-title" id="routeBannerTitle">Lộ trình ngắn nhất</div>
             <div class="route-banner-details" id="routeBannerDetails">-- km • -- phút</div>
+            <div class="route-banner-legs" id="routeBannerLegs" style="display: none;"></div>
           </div>
           <button id="closeBannerBtn" class="close-banner-btn" title="Đóng">✕</button>
         </div>
@@ -67,15 +68,31 @@
       <!-- BOTTOM RESULTS SECTION -->
       <div class="results-section">
         <div class="results-header">
-          <div>
-            <div class="results-title">Địa điểm gợi ý trên bản đồ</div>
-            <div class="results-subtitle">Nhấp vào một địa điểm bất kỳ trên bản đồ hoặc danh sách bên dưới để chỉ đường</div>
+          <div class="results-title-box">
+            <div class="results-title">Địa điểm gợi ý quanh bạn</div>
+            <div class="results-subtitle">Nhấp chọn từ 1 đến 3 địa điểm liên tiếp để tìm đường đi ngắn nhất</div>
           </div>
 
-          <button id="routeButton" class="route-button" disabled>
-            <span class="route-btn-icon">➤</span>
-            <span>CHỈ ĐƯỜNG</span>
-          </button>
+          <div class="results-actions">
+            <label class="tsp-toggle" title="Thuật toán Toán rời rạc: Tìm hoán vị có tổng đường đi ngắn nhất xuất phát từ bạn">
+              <input type="checkbox" id="optimizeOrderCheckbox" checked />
+              <span class="tsp-toggle-label">⚡ Tối ưu đường ngắn nhất (TSP)</span>
+            </label>
+
+            <button id="clearSelectionBtn" class="clear-btn" style="display: none;" title="Xóa các điểm đã chọn">
+              ✕ Bỏ chọn
+            </button>
+
+            <button id="routeButton" class="route-button" disabled>
+              <span class="route-btn-icon">➤</span>
+              <span id="routeBtnText">CHỌN 1-3 ĐỊA ĐIỂM</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thanh danh sách các điểm dừng đã chọn -->
+        <div id="selectedWaypointsBar" class="selected-waypoints-bar" style="display: none;">
+          <!-- Waypoint chips rendered via JS -->
         </div>
 
         <div id="placesList" class="places-list">

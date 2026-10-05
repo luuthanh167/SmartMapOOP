@@ -46,3 +46,31 @@ C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\9cmnr01rv8-4mswofp95i.
 C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\j86nvx9iee-mn99z5t3i6.gz
 C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\umzweigmnt-9ey3dpf7f4.gz
 C:\OOP with Dicreate Mathetic\obj\Debug\net9.0\compressed\3al6r435oq-b3v1ch7jei.gz
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.staticwebassets.runtime.json
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.staticwebassets.endpoints.json
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.exe
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.deps.json
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.runtimeconfig.json
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.dll
+G:\2026-2027\SmartMapOOP\bin\Debug\net9.0\OOP with Dicreate Mathetic.pdb
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\rpswa.dswa.cache.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.GeneratedMSBuildEditorConfig.editorconfig
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.AssemblyInfoInputs.cache
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.AssemblyInfo.cs
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.csproj.CoreCompileInputs.cache
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.MvcApplicationPartsAssemblyInfo.cache
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.sourcelink.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\rjimswa.dswa.cache.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\scopedcss\bundle\OOP with Dicreate Mathetic.styles.css
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\staticwebassets.build.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\staticwebassets.build.json.cache
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\staticwebassets.development.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\staticwebassets.build.endpoints.json
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\swae.build.ex.cache
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.dll
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\refint\OOP with Dicreate Mathetic.dll
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.pdb
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\OOP with Dicreate Mathetic.genruntimeconfig.cache
+G:\2026-2027\SmartMapOOP\obj\Debug\net9.0\ref\OOP with Dicreate Mathetic.dll

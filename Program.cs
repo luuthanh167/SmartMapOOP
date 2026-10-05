@@ -1,4 +1,4 @@
-﻿using SmartMap.Models;
+using SmartMap.Models;
 using SmartMap.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,7 +68,7 @@ app.MapGet("/api/places", async (
     return Results.Ok(result);
 });
 
-// 4. API tìm lộ trình đường đi
+// 4. API tìm lộ trình đường đi (hỗ trợ 1 hoặc 2 - 3 điểm dừng liên tiếp & tối ưu đường ngắn nhất)
 app.MapPost("/api/route", async (
     RouteRequest request,
     RoutingService routingService,
@@ -89,37 +89,43 @@ app.MapPost("/api/route", async (
 
     double startLat = request.StartLat ?? (knownLocations.TryGetValue(request.StartName, out var sPos) ? sPos.Lat : 10.8498);
     double startLon = request.StartLon ?? (knownLocations.TryGetValue(request.StartName, out sPos) ? sPos.Lon : 106.7713);
-
-    double destLat = request.DestLat ?? (knownLocations.TryGetValue(request.DestinationName, out var dPos) ? dPos.Lat : 10.8465);
-    double destLon = request.DestLon ?? (knownLocations.TryGetValue(request.DestinationName, out dPos) ? dPos.Lon : 106.7780);
-
     var start = new Position(startLat, startLon);
-    var destination = new Position(destLat, destLon);
 
-    var route = await routingService.GetRoute(start, destination);
+    List<RouteWaypoint> waypoints = new List<RouteWaypoint>();
 
-    if (route == null)
+    if (request.Waypoints != null && request.Waypoints.Count > 0)
     {
-        double directKm = distanceService.CalculateDistance(start, destination);
-        return Results.Ok(new
+        waypoints = request.Waypoints;
+    }
+    else
+    {
+        double destLat = request.DestLat ?? (knownLocations.TryGetValue(request.DestinationName, out var dPos) ? dPos.Lat : 10.8465);
+        double destLon = request.DestLon ?? (knownLocations.TryGetValue(request.DestinationName, out dPos) ? dPos.Lon : 106.7780);
+        waypoints.Add(new RouteWaypoint
         {
-            totalDistance = directKm,
-            duration = directKm * 120.0,
-            routeCoordinates = new List<double[]>
-            {
-                new double[] { startLon, startLat },
-                new double[] { destLon, destLat }
-            },
-            destination = new { latitude = destLat, longitude = destLon }
+            Name = string.IsNullOrWhiteSpace(request.DestinationName) ? "Điểm đến" : request.DestinationName,
+            Latitude = destLat,
+            Longitude = destLon
         });
     }
 
+    var route = await routingService.GetMultiRoute(start, request.StartName, waypoints, request.OptimizeOrder);
+
+    if (route == null)
+    {
+        return Results.BadRequest(new { error = "Không thể tìm thấy lộ trình." });
+    }
+
+    var lastDest = route.OrderedWaypoints?.LastOrDefault() ?? waypoints.Last();
+
     return Results.Ok(new
     {
-        totalDistance = route.Distance / 1000.0,
-        duration = route.Duration,
+        totalDistance = Math.Round(route.Distance / 1000.0, 2),
+        duration = Math.Round(route.Duration, 1),
         routeCoordinates = route.RouteCoordinates,
-        destination = new { latitude = destLat, longitude = destLon }
+        orderedWaypoints = route.OrderedWaypoints,
+        legs = route.Legs,
+        destination = new { latitude = lastDest.Latitude, longitude = lastDest.Longitude }
     });
 });
 
@@ -130,4 +136,4 @@ Console.WriteLine(" Mở trình duyệt và truy cập: http://localhost:5000");
 Console.WriteLine("=================================================");
 Console.WriteLine();
 
-app.Run("http://localhost:5000");
+app.Run("http://0.0.0.0:5000");

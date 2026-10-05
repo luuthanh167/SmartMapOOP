@@ -12,12 +12,17 @@ const mapLoading = document.getElementById("mapLoading");
 const mapLoadingText = document.getElementById("mapLoadingText");
 const backButton = document.getElementById("backButton");
 const routeButton = document.getElementById("routeButton");
+const routeBtnText = document.getElementById("routeBtnText");
 const placesList = document.getElementById("placesList");
 const recenterBtn = document.getElementById("recenterBtn");
 const routeBanner = document.getElementById("routeBanner");
 const routeBannerTitle = document.getElementById("routeBannerTitle");
 const routeBannerDetails = document.getElementById("routeBannerDetails");
+const routeBannerLegs = document.getElementById("routeBannerLegs");
 const closeBannerBtn = document.getElementById("closeBannerBtn");
+const optimizeOrderCheckbox = document.getElementById("optimizeOrderCheckbox");
+const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+const selectedWaypointsBar = document.getElementById("selectedWaypointsBar");
 
 // Tọa độ các điểm trường học/địa danh phổ biến
 const knownCoordinates = {
@@ -37,6 +42,8 @@ if (knownCoordinates[userLocation]) {
   startLon = knownCoordinates[userLocation][1];
 }
 
+// Quản lý danh sách các điểm được chọn (hỗ trợ chọn 1 đến 3 điểm liên tiếp)
+let selectedPlaces = [];
 let selectedPlace = null;
 let selectedLat = null;
 let selectedLon = null;
@@ -179,7 +186,7 @@ function renderPlacesAndMarkers() {
     // Thao tác click vào Marker trên bản đồ
     markerEl.addEventListener("click", function (e) {
       e.stopPropagation();
-      selectPlace(index);
+      toggleSelectPlace(index);
     });
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: "bottom" })
@@ -210,7 +217,7 @@ function renderPlacesAndMarkers() {
     `;
 
     card.addEventListener("click", function () {
-      selectPlace(index);
+      toggleSelectPlace(index);
     });
 
     placesList.appendChild(card);
@@ -223,47 +230,209 @@ function renderPlacesAndMarkers() {
   });
 }
 
-// Hàm chọn một địa điểm (khi click vào Card hoặc Marker)
-function selectPlace(index) {
+// Thông báo Toast ngắn
+function showToast(message) {
+  const existing = document.querySelector(".toast-msg");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.className = "toast-msg";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(function () {
+    toast.remove();
+  }, 2500);
+}
+
+// Hàm chọn / bỏ chọn địa điểm (hỗ trợ chọn 1 đến 3 điểm liên tiếp)
+function toggleSelectPlace(index) {
   const item = placeMarkers[index];
   if (!item) return;
 
   const place = item.data;
-  selectedPlace = place.name;
-  selectedLat = parseFloat(place.latitude);
-  selectedLon = parseFloat(place.longitude);
+  const existingIndex = selectedPlaces.findIndex((p) => p.index === index);
 
-  // Cập nhật trạng thái active trên toàn bộ Marker
+  if (existingIndex !== -1) {
+    // Đã chọn -> Bỏ chọn
+    selectedPlaces.splice(existingIndex, 1);
+  } else {
+    // Chưa chọn -> Kiểm tra giới hạn tối đa 3 điểm dừng
+    if (selectedPlaces.length >= 3) {
+      showToast("⚠️ Bạn chỉ có thể chọn tối đa 3 điểm dừng liên tiếp!");
+      return;
+    }
+
+    selectedPlaces.push({
+      index: index,
+      name: place.name,
+      latitude: parseFloat(place.latitude),
+      longitude: parseFloat(place.longitude),
+      address: place.address,
+      price: place.price,
+      type: place.type,
+    });
+
+    // Bay nhẹ tới địa điểm vừa chọn
+    map.flyTo({
+      center: [parseFloat(place.longitude), parseFloat(place.latitude)],
+      zoom: 16,
+      speed: 1.2,
+      offset: [0, -60],
+    });
+  }
+
+  // Giữ lại selectedPlace cho tương thích
+  if (selectedPlaces.length > 0) {
+    selectedPlace = selectedPlaces[0].name;
+    selectedLat = selectedPlaces[0].latitude;
+    selectedLon = selectedPlaces[0].longitude;
+  } else {
+    selectedPlace = null;
+    selectedLat = null;
+    selectedLon = null;
+  }
+
+  updateSelectionUI();
+}
+
+// Cập nhật toàn bộ giao diện: Marker (1, 2, 3), Cards, Chips Bar, Nút chỉ đường
+function updateSelectionUI() {
+  // 1. Cập nhật Marker trên bản đồ
   placeMarkers.forEach(function (m, idx) {
-    if (idx === index) {
-      m.element.classList.add("active");
-    } else {
-      m.element.classList.remove("active");
+    const selIdx = selectedPlaces.findIndex((p) => p.index === idx);
+    const pinEl = m.element.querySelector(".marker-pin");
+
+    m.element.classList.remove(
+      "active",
+      "selected-stop",
+      "selected-stop-1",
+      "selected-stop-2",
+      "selected-stop-3"
+    );
+
+    const oldBadge = pinEl.querySelector(".stop-number-badge");
+    if (oldBadge) oldBadge.remove();
+
+    if (selIdx !== -1) {
+      const stopNum = selIdx + 1;
+      m.element.classList.add("selected-stop", "selected-stop-" + stopNum);
+
+      const badge = document.createElement("div");
+      badge.className = "stop-number-badge";
+      badge.textContent = stopNum;
+      pinEl.appendChild(badge);
     }
   });
 
-  // Cập nhật trạng thái selected trên toàn bộ Place Card
+  // 2. Cập nhật thẻ Place Card ở danh sách bên dưới
   const cards = placesList.querySelectorAll(".place-card");
   cards.forEach(function (c, idx) {
-    if (idx === index) {
-      c.classList.add("selected");
+    const selIdx = selectedPlaces.findIndex((p) => p.index === idx);
+
+    c.classList.remove(
+      "selected",
+      "selected-stop-1",
+      "selected-stop-2",
+      "selected-stop-3"
+    );
+
+    const oldCardBadge = c.querySelector(".card-stop-badge");
+    if (oldCardBadge) oldCardBadge.remove();
+
+    if (selIdx !== -1) {
+      const stopNum = selIdx + 1;
+      c.classList.add("selected", "selected-stop-" + stopNum);
+
+      const badge = document.createElement("span");
+      badge.className = "card-stop-badge";
+      badge.textContent = `Chặng ${stopNum}`;
+      c.appendChild(badge);
+
       c.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    } else {
-      c.classList.remove("selected");
     }
   });
 
-  // Bật nút "CHỈ ĐƯỜNG"
-  routeButton.disabled = false;
-  routeButton.innerHTML = `<span class="route-btn-icon">➤</span><span>ĐẾN ${truncate(place.name, 15).toUpperCase()}</span>`;
+  // 3. Cập nhật thanh Waypoints Bar (chips)
+  renderWaypointsBar();
 
-  // Bay nhẹ tới địa điểm vừa chọn
-  map.flyTo({
-    center: [selectedLon, selectedLat],
-    zoom: 16,
-    speed: 1.2,
-    offset: [0, -60],
+  // 4. Cập nhật nút CHỈ ĐƯỜNG & nút Bỏ chọn
+  const count = selectedPlaces.length;
+  if (count === 0) {
+    routeButton.disabled = true;
+    if (routeBtnText) routeBtnText.textContent = "CHỌN 1-3 ĐỊA ĐIỂM";
+    if (clearSelectionBtn) clearSelectionBtn.style.display = "none";
+  } else {
+    routeButton.disabled = false;
+    if (clearSelectionBtn) clearSelectionBtn.style.display = "inline-flex";
+
+    if (routeBtnText) {
+      if (count === 1) {
+        routeBtnText.textContent = `ĐẾN ${truncate(selectedPlaces[0].name, 14).toUpperCase()}`;
+      } else {
+        routeBtnText.textContent = `CHỈ ĐƯỜNG (${count} ĐIỂM LIÊN TIẾP)`;
+      }
+    }
+  }
+}
+
+// Vẽ thanh danh sách điểm dừng (Chip List)
+function renderWaypointsBar() {
+  if (!selectedWaypointsBar) return;
+
+  if (selectedPlaces.length === 0) {
+    selectedWaypointsBar.style.display = "none";
+    selectedWaypointsBar.innerHTML = "";
+    return;
+  }
+
+  selectedWaypointsBar.style.display = "flex";
+  selectedWaypointsBar.innerHTML = "";
+
+  // Chip Xuất phát
+  const startChip = document.createElement("div");
+  startChip.className = "waypoint-chip chip-start";
+  startChip.innerHTML = `<span>📍 Xuất phát: <strong>${truncate(userLocation, 14)}</strong></span>`;
+  selectedWaypointsBar.appendChild(startChip);
+
+  // Chips cho các điểm dừng đã chọn
+  selectedPlaces.forEach(function (p, idx) {
+    const arrow = document.createElement("span");
+    arrow.className = "waypoint-arrow";
+    arrow.textContent = "➔";
+    selectedWaypointsBar.appendChild(arrow);
+
+    const chip = document.createElement("div");
+    chip.className = `waypoint-chip chip-stop-${idx + 1}`;
+    chip.innerHTML = `
+      <span><strong>${idx + 1}.</strong> ${truncate(p.name, 15)}</span>
+      <span class="waypoint-chip-remove" title="Bỏ chọn điểm này">✕</span>
+    `;
+
+    chip.querySelector(".waypoint-chip-remove").addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleSelectPlace(p.index);
+    });
+
+    selectedWaypointsBar.appendChild(chip);
   });
+}
+
+// Xóa toàn bộ điểm đã chọn
+function clearAllSelections() {
+  selectedPlaces = [];
+  selectedPlace = null;
+  selectedLat = null;
+  selectedLon = null;
+  updateSelectionUI();
+
+  if (map.getSource("shortestRoute")) {
+    map.getSource("shortestRoute").setData({
+      type: "Feature",
+      geometry: { type: "LineString", coordinates: [] },
+    });
+  }
+  routeBanner.style.display = "none";
 }
 
 function truncate(str, max) {
@@ -347,12 +516,25 @@ function fitRoute(routeCoordinates) {
   });
 }
 
-// Xử lý khi nhấn nút "CHỈ ĐƯỜNG"
+// Xử lý khi nhấn nút "CHỈ ĐƯỜNG" (hỗ trợ 1 đến 3 điểm liên tiếp & tối ưu đường ngắn nhất)
 function findRoute() {
-  if (selectedPlace === null) return;
+  if (selectedPlaces.length === 0) return;
 
-  mapLoadingText.textContent = `Đang tìm tuyến đường nhanh nhất đến ${selectedPlace}...`;
+  const count = selectedPlaces.length;
+  mapLoadingText.textContent = count === 1
+    ? `Đang tìm đường ngắn nhất đến ${selectedPlaces[0].name}...`
+    : `Đang tìm đường đi ngắn nhất qua ${count} điểm liên tiếp...`;
   mapLoading.style.display = "flex";
+
+  const isOptimize = optimizeOrderCheckbox ? optimizeOrderCheckbox.checked : true;
+
+  const waypointsPayload = selectedPlaces.map(function (p) {
+    return {
+      name: p.name,
+      latitude: p.latitude,
+      longitude: p.longitude,
+    };
+  });
 
   const apiUrl = window.location.origin.startsWith("http")
     ? "/api/route"
@@ -365,11 +547,13 @@ function findRoute() {
     },
     body: JSON.stringify({
       startName: userLocation,
-      destinationName: selectedPlace,
       startLat: startLat,
       startLon: startLon,
-      destLat: selectedLat,
-      destLon: selectedLon,
+      waypoints: waypointsPayload,
+      optimizeOrder: isOptimize,
+      destinationName: selectedPlaces[0].name,
+      destLat: selectedPlaces[0].latitude,
+      destLon: selectedPlaces[0].longitude,
     }),
   })
     .then(function (response) {
@@ -384,19 +568,64 @@ function findRoute() {
       drawRoute(data.routeCoordinates);
       fitRoute(data.routeCoordinates);
 
-      // Hiển thị banner kết quả kiểu Google Maps
-      const dist = Number(data.totalDistance).toFixed(2);
-      const estMin = Math.max(1, Math.round(data.totalDistance * 3)); // ước tính phút di chuyển
-      routeBannerTitle.textContent = `${userLocation} → ${selectedPlace}`;
-      routeBannerDetails.textContent = `🚗 Quãng đường: ${dist} km • Ước tính ~${estMin} phút`;
-      routeBanner.style.display = "flex";
+      // Nếu backend đã tối ưu thứ tự ghé thăm (TSP), cập nhật lại thứ tự selectedPlaces
+      if (Array.isArray(data.orderedWaypoints) && data.orderedWaypoints.length > 1) {
+        const reordered = [];
+        data.orderedWaypoints.forEach(function (ow) {
+          const match = selectedPlaces.find(function (sp) {
+            return (
+              Math.abs(sp.latitude - ow.latitude) < 0.0001 &&
+              Math.abs(sp.longitude - ow.longitude) < 0.0001
+            );
+          });
+          if (match) reordered.push(match);
+        });
 
+        if (reordered.length === selectedPlaces.length) {
+          selectedPlaces = reordered;
+          updateSelectionUI();
+        }
+      }
+
+      // Hiển thị banner kết quả
+      const dist = Number(data.totalDistance).toFixed(2);
+      const estMin = Math.max(1, Math.round(data.totalDistance * 3));
+
+      if (selectedPlaces.length === 1) {
+        routeBannerTitle.textContent = `${userLocation} ➔ ${selectedPlaces[0].name}`;
+      } else {
+        routeBannerTitle.textContent = isOptimize
+          ? `⚡ Lộ trình tối ưu (${selectedPlaces.length} điểm dừng - TSP)`
+          : `🚗 Lộ trình (${selectedPlaces.length} điểm dừng)`;
+      }
+
+      routeBannerDetails.textContent = `🚗 Quãng đường: ${dist} km • Ước tính ~${estMin} phút`;
+
+      // Hiển thị chi tiết từng chặng (Legs)
+      if (Array.isArray(data.legs) && data.legs.length > 1 && routeBannerLegs) {
+        routeBannerLegs.style.display = "flex";
+        routeBannerLegs.innerHTML = data.legs
+          .map(function (leg, idx) {
+            return `
+            <div class="leg-item">
+              <span class="leg-bullet">●</span>
+              <span><strong>Chặng ${idx + 1}:</strong> ${truncate(leg.fromName, 14)} ➔ ${truncate(leg.toName, 14)}</span>
+              <span>(${leg.distanceKm} km • ~${Math.round(leg.durationMin)} phút)</span>
+            </div>`;
+          })
+          .join("");
+      } else if (routeBannerLegs) {
+        routeBannerLegs.style.display = "none";
+        routeBannerLegs.innerHTML = "";
+      }
+
+      routeBanner.style.display = "flex";
       mapLoading.style.display = "none";
     })
     .catch(function (error) {
       console.log("Routing error:", error);
       mapLoadingText.textContent = "Không tìm thấy tuyến đường.";
-      setTimeout(() => {
+      setTimeout(function () {
         mapLoading.style.display = "none";
       }, 2000);
     });
@@ -405,6 +634,20 @@ function findRoute() {
 routeButton.addEventListener("click", function () {
   findRoute();
 });
+
+if (clearSelectionBtn) {
+  clearSelectionBtn.addEventListener("click", function () {
+    clearAllSelections();
+  });
+}
+
+if (optimizeOrderCheckbox) {
+  optimizeOrderCheckbox.addEventListener("change", function () {
+    if (selectedPlaces.length > 1 && map.getSource("shortestRoute")) {
+      findRoute();
+    }
+  });
+}
 
 closeBannerBtn.addEventListener("click", function () {
   routeBanner.style.display = "none";
