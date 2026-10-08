@@ -70,7 +70,7 @@
         <div class="results-header">
           <div class="results-title-box">
             <div class="results-title">Địa điểm gợi ý quanh bạn</div>
-            <div class="results-subtitle">Nhấp chọn từ 1 đến 3 địa điểm liên tiếp để tìm đường đi ngắn nhất</div>
+            <div class="results-subtitle">Nhấp chọn từ 1 đến 5 địa điểm đa dạng loại hình để tìm lộ trình tối ưu</div>
           </div>
 
           <div class="results-actions">
@@ -85,9 +85,20 @@
 
             <button id="routeButton" class="route-button" disabled>
               <span class="route-btn-icon">➤</span>
-              <span id="routeBtnText">CHỌN 1-3 ĐỊA ĐIỂM</span>
+              <span id="routeBtnText">CHỌN 1-5 ĐỊA ĐIỂM</span>
             </button>
           </div>
+        </div>
+
+        <!-- Thanh lọc theo từng loại hình nhanh chóng -->
+        <div class="category-filter-bar" id="categoryFilterBar">
+          <button class="filter-tab active" data-cat="all">🌟 Tất cả các loại</button>
+          <button class="filter-tab" data-cat="COFFEE">☕ Cà phê</button>
+          <button class="filter-tab" data-cat="FOOD">🍜 Ẩm thực</button>
+          <button class="filter-tab" data-cat="ENTERTAINMENT">🎮 Giải trí</button>
+          <button class="filter-tab" data-cat="SHOPPING">🛍️ Mua sắm</button>
+          <button class="filter-tab" data-cat="STUDY">📚 Học tập</button>
+          <button class="filter-tab" data-cat="RELAX">🌳 Thư giãn</button>
         </div>
 
         <!-- Thanh danh sách các điểm dừng đã chọn -->

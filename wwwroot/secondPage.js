@@ -257,9 +257,9 @@ function toggleSelectPlace(index) {
     // Đã chọn -> Bỏ chọn
     selectedPlaces.splice(existingIndex, 1);
   } else {
-    // Chưa chọn -> Kiểm tra giới hạn tối đa 3 điểm dừng
-    if (selectedPlaces.length >= 3) {
-      showToast("⚠️ Bạn chỉ có thể chọn tối đa 3 điểm dừng liên tiếp!");
+    // Chưa chọn -> Kiểm tra giới hạn tối đa 10 điểm dừng
+    if (selectedPlaces.length >= 10) {
+      showToast("⚠️ Bạn chỉ có thể chọn tối đa 10 điểm dừng liên tiếp!");
       return;
     }
 
@@ -296,20 +296,17 @@ function toggleSelectPlace(index) {
   updateSelectionUI();
 }
 
-// Cập nhật toàn bộ giao diện: Marker (1, 2, 3), Cards, Chips Bar, Nút chỉ đường
+// Cập nhật toàn bộ giao diện: Marker (1..10), Cards, Chips Bar, Nút chỉ đường
 function updateSelectionUI() {
   // 1. Cập nhật Marker trên bản đồ
   placeMarkers.forEach(function (m, idx) {
     const selIdx = selectedPlaces.findIndex((p) => p.index === idx);
     const pinEl = m.element.querySelector(".marker-pin");
 
-    m.element.classList.remove(
-      "active",
-      "selected-stop",
-      "selected-stop-1",
-      "selected-stop-2",
-      "selected-stop-3"
-    );
+    m.element.classList.remove("active", "selected-stop");
+    for (let s = 1; s <= 10; s++) {
+      m.element.classList.remove("selected-stop-" + s);
+    }
 
     const oldBadge = pinEl.querySelector(".stop-number-badge");
     if (oldBadge) oldBadge.remove();
@@ -330,12 +327,10 @@ function updateSelectionUI() {
   cards.forEach(function (c, idx) {
     const selIdx = selectedPlaces.findIndex((p) => p.index === idx);
 
-    c.classList.remove(
-      "selected",
-      "selected-stop-1",
-      "selected-stop-2",
-      "selected-stop-3"
-    );
+    c.classList.remove("selected");
+    for (let s = 1; s <= 10; s++) {
+      c.classList.remove("selected-stop-" + s);
+    }
 
     const oldCardBadge = c.querySelector(".card-stop-badge");
     if (oldCardBadge) oldCardBadge.remove();
@@ -360,7 +355,7 @@ function updateSelectionUI() {
   const count = selectedPlaces.length;
   if (count === 0) {
     routeButton.disabled = true;
-    if (routeBtnText) routeBtnText.textContent = "CHỌN 1-3 ĐỊA ĐIỂM";
+    if (routeBtnText) routeBtnText.textContent = "CHỌN 1-10 ĐỊA ĐIỂM";
     if (clearSelectionBtn) clearSelectionBtn.style.display = "none";
   } else {
     routeButton.disabled = false;
@@ -663,11 +658,11 @@ function getDefaultFallbackPlaces() {
     {
       id: 1,
       name: "The Coffee House - Lê Văn Việt",
-      address: "Lê Văn Việt, TP. Thủ Đức",
+      address: "114 Lê Văn Việt, TP. Thủ Đức",
       latitude: startLat - 0.0033,
       longitude: startLon + 0.0067,
       type: "COFFEE",
-      price: 45000,
+      price: 49000,
     },
     {
       id: 2,
@@ -680,30 +675,93 @@ function getDefaultFallbackPlaces() {
     },
     {
       id: 3,
-      name: "Local Food Restaurant",
-      address: "Võ Văn Ngân, TP. Thủ Đức",
-      latitude: startLat + 0.0014,
-      longitude: startLon + 0.0012,
-      type: "FOOD",
-      price: 50000,
-    },
-    {
-      id: 4,
-      name: "Phúc Long Coffee & Tea",
-      address: "Đỗ Xuân Hợp, TP. Thủ Đức",
-      latitude: startLat - 0.0080,
-      longitude: startLon - 0.0030,
+      name: "Katinat Saigon Kafe - Lê Văn Việt",
+      address: "128 Lê Văn Việt, TP. Thủ Đức",
+      latitude: startLat - 0.0025,
+      longitude: startLon + 0.0048,
       type: "COFFEE",
       price: 55000,
     },
     {
+      id: 4,
+      name: "Quán Cơm Niêu Sài Gòn",
+      address: "200 Võ Văn Ngân, TP. Thủ Đức",
+      latitude: startLat + 0.0012,
+      longitude: startLon - 0.0041,
+      type: "FOOD",
+      price: 75000,
+    },
+    {
       id: 5,
-      name: "Entertainment CGV Cinema",
-      address: "Tầng 5, Vincom Plaza",
+      name: "Phở 24 - Vincom Lê Văn Việt",
+      address: "Tầng 4 Vincom Plaza",
+      latitude: startLat - 0.0039,
+      longitude: startLon + 0.0066,
+      type: "FOOD",
+      price: 65000,
+    },
+    {
+      id: 6,
+      name: "CGV Cinemas - Vincom Lê Văn Việt",
+      address: "Tầng 5, Vincom Plaza Lê Văn Việt",
       latitude: startLat - 0.0042,
       longitude: startLon + 0.0068,
       type: "ENTERTAINMENT",
-      price: 90000,
+      price: 95000,
+    },
+    {
+      id: 7,
+      name: "Bida Club 68 - Hoàng Diệu 2",
+      address: "68 Hoàng Diệu 2, TP. Thủ Đức",
+      latitude: startLat + 0.0047,
+      longitude: startLon - 0.0001,
+      type: "ENTERTAINMENT",
+      price: 70000,
+    },
+    {
+      id: 8,
+      name: "Vincom Plaza Lê Văn Việt",
+      address: "50 Lê Văn Việt, Hiệp Phú, TP. Thủ Đức",
+      latitude: startLat - 0.0040,
+      longitude: startLon + 0.0065,
+      type: "SHOPPING",
+      price: 0,
+    },
+    {
+      id: 9,
+      name: "Nhà Sách Fahasa Thủ Đức",
+      address: "04 Tô Ngọc Vân, Linh Tây, TP. Thủ Đức",
+      latitude: startLat + 0.0062,
+      longitude: startLon - 0.0128,
+      type: "SHOPPING",
+      price: 0,
+    },
+    {
+      id: 10,
+      name: "Thư viện ĐH Sư phạm Kỹ thuật",
+      address: "Tòa nhà Trung tâm, 1 Võ Văn Ngân",
+      latitude: startLat + 0.0010,
+      longitude: startLon + 0.0007,
+      type: "STUDY",
+      price: 0,
+    },
+    {
+      id: 11,
+      name: "The Study Hub - Không Gian Tự Học",
+      address: "38 Dân Chủ, Bình Thọ, TP. Thủ Đức",
+      latitude: startLat + 0.0032,
+      longitude: startLon - 0.0023,
+      type: "STUDY",
+      price: 30000,
+    },
+    {
+      id: 12,
+      name: "Công viên Làng Đại Học Quốc Gia",
+      address: "ĐHQG TP.HCM, TP. Thủ Đức",
+      latitude: startLat + 0.0217,
+      longitude: startLon + 0.0297,
+      type: "RELAX",
+      price: 0,
     },
   ];
 }
