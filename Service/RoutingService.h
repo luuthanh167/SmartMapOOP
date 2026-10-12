@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "../Models/Position.h"
 #include "DistanceService.h"
 
@@ -26,6 +27,12 @@ class RoutingService {
 private:
     DistanceService distanceService;
 
+    std::string FetchOsrmRouteJson(double startLon, double startLat, double destLon, double destLat);
+    bool ParseOsrmResponse(const std::string& json,
+                           double& outDistance,
+                           double& outDuration,
+                           std::vector<std::vector<double>>& outCoordinates);
+
 public:
     RoutingService();
 
@@ -34,3 +41,4 @@ public:
 
 } // namespace Service
 } // namespace SmartMap
+

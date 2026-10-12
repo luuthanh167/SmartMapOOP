@@ -278,7 +278,7 @@ void HttpServer::ServeStaticFile(const std::string& urlPath, uintptr_t clientSoc
 }
 
 void HttpServer::HandleGetPlaces(const std::string& queryString, uintptr_t clientSocket) {
-    std::string category = "coffee";
+    std::string category = "all";
     double lat = 10.8498;
     double lon = 106.7713;
     double distance = 2.0;
@@ -292,7 +292,7 @@ void HttpServer::HandleGetPlaces(const std::string& queryString, uintptr_t clien
             std::string key = param.substr(0, eq);
             std::string val = UrlDecode(param.substr(eq + 1));
 
-            if (key == "category") category = val;
+            if (key == "category" || key == "categories") category = val;
             else if (key == "lat") try { lat = std::stod(val); } catch (...) {}
             else if (key == "lon") try { lon = std::stod(val); } catch (...) {}
             else if (key == "distance") try { distance = std::stod(val); } catch (...) {}
@@ -300,8 +300,8 @@ void HttpServer::HandleGetPlaces(const std::string& queryString, uintptr_t clien
         }
     }
 
-    Models::DestinationType type = Models::StringToDestinationType(category);
-    auto places = placeService.SearchPlaces(lat, lon, distance * 1000.0, type, budget);
+    std::vector<Models::DestinationType> types = Models::ParseMultipleDestinationTypes(category);
+    auto places = placeService.SearchPlaces(lat, lon, distance * 1000.0, types, budget);
 
     std::ostringstream json;
     json << "[\n";

@@ -1,9 +1,23 @@
 const params = new URLSearchParams(window.location.search);
 
 const userLocation = params.get("location") || "Đại học Công nghệ Kỹ thuật TP.HCM";
-const category = params.get("category") || "coffee";
+const initialCategoryParam = params.get("category") || "all";
 const budget = params.get("budget") || "50000";
 const distance = params.get("distance") || "2";
+
+// Quản lý các danh mục đang được chọn (hỗ trợ chọn nhiều topic cùng 1 lúc)
+const selectedCategories = new Set();
+if (!initialCategoryParam || initialCategoryParam.toLowerCase() === "all") {
+  selectedCategories.add("all");
+} else {
+  initialCategoryParam.split(",").forEach(function (c) {
+    const trimmed = c.trim().toUpperCase();
+    if (trimmed) selectedCategories.add(trimmed);
+  });
+  if (selectedCategories.size === 0) {
+    selectedCategories.add("all");
+  }
+}
 
 const searchInfo = document.getElementById("searchInfo");
 const summaryTitle = document.getElementById("summaryTitle");
@@ -23,6 +37,7 @@ const closeBannerBtn = document.getElementById("closeBannerBtn");
 const optimizeOrderCheckbox = document.getElementById("optimizeOrderCheckbox");
 const clearSelectionBtn = document.getElementById("clearSelectionBtn");
 const selectedWaypointsBar = document.getElementById("selectedWaypointsBar");
+const categoryFilterBar = document.getElementById("categoryFilterBar");
 
 // Tọa độ các điểm trường học/địa danh phổ biến
 const knownCoordinates = {
@@ -42,7 +57,7 @@ if (knownCoordinates[userLocation]) {
   startLon = knownCoordinates[userLocation][1];
 }
 
-// Quản lý danh sách các điểm được chọn (hỗ trợ chọn 1 đến 3 điểm liên tiếp)
+// Quản lý danh sách các điểm được chọn (hỗ trợ chọn 1 đến 10 điểm liên tiếp)
 let selectedPlaces = [];
 let selectedPlace = null;
 let selectedLat = null;
@@ -53,9 +68,6 @@ let startMarker = null;
 
 // Cập nhật tiêu đề thanh điều hướng trên
 summaryTitle.textContent = `🗺️ ${userLocation}`;
-searchInfo.textContent = `${getCategoryLabel(category)} • Ngân sách: ${
-  budget ? Number(budget).toLocaleString("vi-VN") + " đ" : "Tự do"
-} • Bán kính: ${distance} km`;
 
 // Khởi tạo bản đồ MapLibre
 const map = new maplibregl.Map({
@@ -85,11 +97,6 @@ function createStartMarker() {
     .addTo(map);
 }
 
-map.on("load", function () {
-  createStartMarker();
-  loadPlaces();
-});
-
 // Tính khoảng cách Haversine sơ bộ để hiển thị trên thẻ
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -111,6 +118,7 @@ function getCategoryIcon(cat) {
   if (c.includes("entertainment") || c.includes("cinema")) return "🎮";
   if (c.includes("shopping") || c.includes("mall")) return "🛍️";
   if (c.includes("study") || c.includes("library")) return "📚";
+  if (c.includes("relax") || c.includes("park")) return "🌳";
   return "📍";
 }
 
@@ -120,15 +128,98 @@ function getCategoryLabel(cat) {
   if (c.includes("food")) return "Ẩm thực";
   if (c.includes("entertainment")) return "Giải trí";
   if (c.includes("shopping")) return "Mua sắm";
-  if (c.includes("study")) return "Học tập / Thư viện";
+  if (c.includes("study")) return "Học tập";
+  if (c.includes("relax")) return "Thư giãn";
+  if (c.includes("all")) return "Tất cả các loại";
   return "Địa điểm";
 }
 
-// Tải tất cả địa điểm và hiển thị toàn bộ Marker + Tên lên bản đồ
+function getSelectedCategoriesLabel() {
+  if (selectedCategories.has("all")) {
+    return "Tất cả các loại";
+  }
+  const labels = Array.from(selectedCategories).map(function (c) {
+    return getCategoryLabel(c);
+  });
+  return labels.join(" + ");
+}
+
+function updateSearchInfo() {
+  if (!searchInfo) return;
+  searchInfo.textContent = `${getSelectedCategoriesLabel()} • Ngân sách: ${
+    budget ? Number(budget).toLocaleString("vi-VN") + " đ" : "Tự do"
+  } • Bán kính: ${distance} km`;
+}
+
+// Cập nhật trạng thái sáng / tối (active) của các nút trên thanh lọc theo category
+function updateCategoryTabsUI() {
+  if (!categoryFilterBar) return;
+  const tabs = categoryFilterBar.querySelectorAll(".filter-tab");
+  const isAll = selectedCategories.has("all");
+
+  tabs.forEach(function (tab) {
+    const cat = (tab.dataset.cat || "").toUpperCase();
+    if (cat === "ALL") {
+      if (isAll) {
+        tab.classList.add("active");
+      } else {
+        tab.classList.remove("active");
+      }
+    } else {
+      if (!isAll && selectedCategories.has(cat)) {
+        tab.classList.add("active");
+      } else {
+        tab.classList.remove("active");
+      }
+    }
+  });
+}
+
+// Khởi tạo sự kiện bấm chuyển / chọn nhiều topic cho thanh lọc
+function initCategoryFilterBar() {
+  if (!categoryFilterBar) return;
+  const tabs = categoryFilterBar.querySelectorAll(".filter-tab");
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      const cat = (tab.dataset.cat || "").toUpperCase();
+      if (cat === "ALL") {
+        selectedCategories.clear();
+        selectedCategories.add("all");
+      } else {
+        selectedCategories.delete("all");
+        if (selectedCategories.has(cat)) {
+          selectedCategories.delete(cat);
+          if (selectedCategories.size === 0) {
+            selectedCategories.add("all");
+          }
+        } else {
+          selectedCategories.add(cat);
+        }
+      }
+      updateCategoryTabsUI();
+      updateSearchInfo();
+      loadPlaces();
+    });
+  });
+}
+
+map.on("load", function () {
+  createStartMarker();
+  initCategoryFilterBar();
+  updateCategoryTabsUI();
+  updateSearchInfo();
+  loadPlaces();
+});
+
+// Tải tất cả địa điểm theo các topic đang được chọn
 function loadPlaces() {
+  const catParam = selectedCategories.has("all")
+    ? "all"
+    : Array.from(selectedCategories).join(",");
+
   const apiUrl = window.location.origin.startsWith("http")
-    ? `/api/places?category=${encodeURIComponent(category)}&lat=${startLat}&lon=${startLon}&distance=${distance}&budget=${budget}`
-    : `http://localhost:5000/api/places?category=${encodeURIComponent(category)}&lat=${startLat}&lon=${startLon}&distance=${distance}&budget=${budget}`;
+    ? `/api/places?category=${encodeURIComponent(catParam)}&lat=${startLat}&lon=${startLon}&distance=${distance}&budget=${budget}`
+    : `http://localhost:5000/api/places?category=${encodeURIComponent(catParam)}&lat=${startLat}&lon=${startLon}&distance=${distance}&budget=${budget}`;
 
   fetch(apiUrl)
     .then(function (res) {
@@ -139,20 +230,22 @@ function loadPlaces() {
       if (Array.isArray(places) && places.length > 0) {
         allPlaces = places;
       } else {
-        allPlaces = getDefaultFallbackPlaces();
+        allPlaces = getFilteredFallbackPlaces();
       }
       renderPlacesAndMarkers();
     })
     .catch(function (err) {
-      console.log("Using default fallback places:", err);
-      allPlaces = getDefaultFallbackPlaces();
+      console.log("Using fallback places:", err);
+      allPlaces = getFilteredFallbackPlaces();
       renderPlacesAndMarkers();
     });
 }
 
 function renderPlacesAndMarkers() {
   // Xóa marker cũ nếu có
-  placeMarkers.forEach((m) => m.remove());
+  placeMarkers.forEach(function (m) {
+    if (m && m.marker) m.marker.remove();
+  });
   placeMarkers = [];
   placesList.innerHTML = "";
 
@@ -161,21 +254,28 @@ function renderPlacesAndMarkers() {
   const bounds = new maplibregl.LngLatBounds();
   bounds.extend([startLon, startLat]);
 
-  const icon = getCategoryIcon(category);
+  // Ghép các điểm đã chọn nếu chưa có trong allPlaces để marker vẫn hiển thị trên bản đồ
+  const placesForMap = [...allPlaces];
+  selectedPlaces.forEach(function (sp) {
+    const exists = placesForMap.some(function (p) {
+      return p.name === sp.name;
+    });
+    if (!exists) {
+      placesForMap.push(sp);
+    }
+  });
 
-  allPlaces.forEach(function (p, index) {
+  // Render các marker trên bản đồ
+  placesForMap.forEach(function (p) {
     const pLat = parseFloat(p.latitude);
     const pLon = parseFloat(p.longitude);
-
     bounds.extend([pLon, pLat]);
 
-    const distKm = calculateDistanceKm(startLat, startLon, pLat, pLon);
-    const distText = distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`;
+    const icon = getCategoryIcon(p.type);
 
     // 1. TẠO MARKER VỚI TÊN HIỂN THỊ TRỰC TIẾP TRÊN BẢN ĐỒ (Google Maps Style)
     const markerEl = document.createElement("div");
     markerEl.className = "custom-marker";
-    markerEl.dataset.index = index;
     markerEl.innerHTML = `
       <div class="marker-pin">
         <span class="marker-icon">${icon}</span>
@@ -183,10 +283,9 @@ function renderPlacesAndMarkers() {
       <div class="marker-label" title="${p.name}">${p.name}</div>
     `;
 
-    // Thao tác click vào Marker trên bản đồ
     markerEl.addEventListener("click", function (e) {
       e.stopPropagation();
-      toggleSelectPlace(index);
+      toggleSelectPlace(p);
     });
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: "bottom" })
@@ -194,11 +293,21 @@ function renderPlacesAndMarkers() {
       .addTo(map);
 
     placeMarkers.push({ marker, element: markerEl, data: p });
+  });
 
-    // 2. TẠO THẺ PLACE CARD Ở DANH SÁCH BÊN DƯỚI
+  // Render các thẻ Place Card ở danh sách bên dưới
+  allPlaces.forEach(function (p) {
+    const pLat = parseFloat(p.latitude);
+    const pLon = parseFloat(p.longitude);
+    const distKm = calculateDistanceKm(startLat, startLon, pLat, pLon);
+    const distText = distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`;
+
+    const icon = getCategoryIcon(p.type);
+    const catLabel = getCategoryLabel(p.type);
+
     const card = document.createElement("div");
     card.className = "place-card";
-    card.dataset.index = index;
+    card.dataset.name = p.name;
 
     const priceText = p.price && p.price > 0
       ? Number(p.price).toLocaleString("vi-VN") + " đ"
@@ -208,7 +317,10 @@ function renderPlacesAndMarkers() {
       <div class="place-icon">${icon}</div>
       <div class="place-info">
         <div class="place-name" title="${p.name}">${p.name}</div>
-        <div class="place-details">${priceText}</div>
+        <div class="place-details">
+          ${priceText}
+          <span class="place-type-badge">${catLabel}</span>
+        </div>
         <div class="place-meta">
           <span class="place-rating">⭐ 4.5</span>
           <span class="place-distance">📍 ${distText}</span>
@@ -217,17 +329,20 @@ function renderPlacesAndMarkers() {
     `;
 
     card.addEventListener("click", function () {
-      toggleSelectPlace(index);
+      toggleSelectPlace(p);
     });
 
     placesList.appendChild(card);
   });
 
-  // Tự động căn chỉnh bản đồ hiển thị trọn vẹn điểm xuất phát và toàn bộ các điểm gợi ý
+  // Tự động căn chỉnh bản đồ
   map.fitBounds(bounds, {
     padding: { top: 90, bottom: 220, left: 60, right: 60 },
     maxZoom: 16,
   });
+
+  // Đồng bộ lại trạng thái chọn (badges, chips bar, nút chỉ đường)
+  updateSelectionUI();
 }
 
 // Thông báo Toast ngắn
@@ -245,13 +360,12 @@ function showToast(message) {
   }, 2500);
 }
 
-// Hàm chọn / bỏ chọn địa điểm (hỗ trợ chọn 1 đến 3 điểm liên tiếp)
-function toggleSelectPlace(index) {
-  const item = placeMarkers[index];
-  if (!item) return;
-
-  const place = item.data;
-  const existingIndex = selectedPlaces.findIndex((p) => p.index === index);
+// Hàm chọn / bỏ chọn địa điểm (hỗ trợ chọn từ 1 đến 10 điểm dừng)
+function toggleSelectPlace(place) {
+  const existingIndex = selectedPlaces.findIndex(function (p) {
+    return p.name === place.name ||
+      (Math.abs(p.latitude - place.latitude) < 0.0001 && Math.abs(p.longitude - place.longitude) < 0.0001);
+  });
 
   if (existingIndex !== -1) {
     // Đã chọn -> Bỏ chọn
@@ -264,7 +378,6 @@ function toggleSelectPlace(index) {
     }
 
     selectedPlaces.push({
-      index: index,
       name: place.name,
       latitude: parseFloat(place.latitude),
       longitude: parseFloat(place.longitude),
@@ -296,11 +409,34 @@ function toggleSelectPlace(index) {
   updateSelectionUI();
 }
 
+// Xóa 1 điểm dừng cụ thể khỏi danh sách
+function removeSelectedPlace(placeName) {
+  const existingIndex = selectedPlaces.findIndex(function (p) {
+    return p.name === placeName;
+  });
+  if (existingIndex !== -1) {
+    selectedPlaces.splice(existingIndex, 1);
+    if (selectedPlaces.length > 0) {
+      selectedPlace = selectedPlaces[0].name;
+      selectedLat = selectedPlaces[0].latitude;
+      selectedLon = selectedPlaces[0].longitude;
+    } else {
+      selectedPlace = null;
+      selectedLat = null;
+      selectedLon = null;
+    }
+    updateSelectionUI();
+  }
+}
+
 // Cập nhật toàn bộ giao diện: Marker (1..10), Cards, Chips Bar, Nút chỉ đường
 function updateSelectionUI() {
   // 1. Cập nhật Marker trên bản đồ
-  placeMarkers.forEach(function (m, idx) {
-    const selIdx = selectedPlaces.findIndex((p) => p.index === idx);
+  placeMarkers.forEach(function (m) {
+    const selIdx = selectedPlaces.findIndex(function (p) {
+      return p.name === m.data.name ||
+        (Math.abs(p.latitude - m.data.latitude) < 0.0001 && Math.abs(p.longitude - m.data.longitude) < 0.0001);
+    });
     const pinEl = m.element.querySelector(".marker-pin");
 
     m.element.classList.remove("active", "selected-stop");
@@ -324,8 +460,11 @@ function updateSelectionUI() {
 
   // 2. Cập nhật thẻ Place Card ở danh sách bên dưới
   const cards = placesList.querySelectorAll(".place-card");
-  cards.forEach(function (c, idx) {
-    const selIdx = selectedPlaces.findIndex((p) => p.index === idx);
+  cards.forEach(function (c) {
+    const cardName = c.dataset.name;
+    const selIdx = selectedPlaces.findIndex(function (p) {
+      return p.name === cardName;
+    });
 
     c.classList.remove("selected");
     for (let s = 1; s <= 10; s++) {
@@ -343,8 +482,6 @@ function updateSelectionUI() {
       badge.className = "card-stop-badge";
       badge.textContent = `Chặng ${stopNum}`;
       c.appendChild(badge);
-
-      c.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     }
   });
 
@@ -397,16 +534,18 @@ function renderWaypointsBar() {
     arrow.textContent = "➔";
     selectedWaypointsBar.appendChild(arrow);
 
+    const catIcon = getCategoryIcon(p.type);
+
     const chip = document.createElement("div");
     chip.className = `waypoint-chip chip-stop-${idx + 1}`;
     chip.innerHTML = `
-      <span><strong>${idx + 1}.</strong> ${truncate(p.name, 15)}</span>
+      <span><strong>${idx + 1}.</strong> ${catIcon} ${truncate(p.name, 15)}</span>
       <span class="waypoint-chip-remove" title="Bỏ chọn điểm này">✕</span>
     `;
 
     chip.querySelector(".waypoint-chip-remove").addEventListener("click", function (e) {
       e.stopPropagation();
-      toggleSelectPlace(p.index);
+      removeSelectedPlace(p.name);
     });
 
     selectedWaypointsBar.appendChild(chip);
@@ -562,6 +701,28 @@ function findRoute() {
 
       drawRoute(data.routeCoordinates);
       fitRoute(data.routeCoordinates);
+
+      // Nếu tọa độ nhận về ít điểm (đường thẳng dự phòng), tự động tải lại đường phố thực tế từ OSRM
+      if (data.routeCoordinates.length <= 4) {
+        const waypointsList = data.orderedWaypoints || selectedPlaces;
+        const coordsStr = [
+          `${startLon},${startLat}`,
+          ...waypointsList.map(function (p) { return `${p.longitude},${p.latitude}`; })
+        ].join(";");
+
+        fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`)
+          .then(function (res) { return res.json(); })
+          .then(function (osrm) {
+            if (osrm.routes && osrm.routes.length > 0 && osrm.routes[0].geometry && osrm.routes[0].geometry.coordinates) {
+              const realStreetCoords = osrm.routes[0].geometry.coordinates;
+              drawRoute(realStreetCoords);
+              fitRoute(realStreetCoords);
+            }
+          })
+          .catch(function (e) {
+            console.log("OSRM client fetch skipped:", e);
+          });
+      }
 
       // Nếu backend đã tối ưu thứ tự ghé thăm (TSP), cập nhật lại thứ tự selectedPlaces
       if (Array.isArray(data.orderedWaypoints) && data.orderedWaypoints.length > 1) {
@@ -764,4 +925,12 @@ function getDefaultFallbackPlaces() {
       price: 0,
     },
   ];
+}
+
+function getFilteredFallbackPlaces() {
+  const list = getDefaultFallbackPlaces();
+  if (selectedCategories.has("all")) return list;
+  return list.filter(function (p) {
+    return selectedCategories.has((p.type || "").toUpperCase());
+  });
 }
