@@ -3,6 +3,8 @@ chcp 65001 >nul
 echo ===================================================
 echo  Bien dich va chay SmartMap C++ (Web App)
 echo ===================================================
+if exist "C:\msys64\ucrt64\bin\g++.exe" set "PATH=C:\msys64\ucrt64\bin;%PATH%"
+if exist "C:\msys64\mingw64\bin\g++.exe" set "PATH=C:\msys64\mingw64\bin;%PATH%"
 
 where g++ >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

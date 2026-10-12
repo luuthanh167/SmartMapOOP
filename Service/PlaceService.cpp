@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <map>
+#include <set>
 
 namespace SmartMap {
 namespace Service {
@@ -35,6 +36,15 @@ std::vector<Models::Location> PlaceService::SearchPlaces(
     double longitude,
     double radiusMeters,
     Models::DestinationType type,
+    double budget) {
+    return SearchPlaces(latitude, longitude, radiusMeters, std::vector<Models::DestinationType>{ type }, budget);
+}
+
+std::vector<Models::Location> PlaceService::SearchPlaces(
+    double latitude,
+    double longitude,
+    double radiusMeters,
+    const std::vector<Models::DestinationType>& types,
     double budget) {
 
     DistanceService distanceService;
@@ -130,8 +140,10 @@ std::vector<Models::Location> PlaceService::SearchPlaces(
     std::vector<Models::Location> results;
     int idCounter = 1;
 
-    // KHI CHỌN "ALL" (ĐA DẠNG LOẠI HÌNH) - LẤY CÂN BẰNG TỪ TẤT CẢ CÁC DANH MỤC
-    if (type == Models::DestinationType::ALL) {
+    bool isAll = types.empty() || (std::find(types.begin(), types.end(), Models::DestinationType::ALL) != types.end());
+
+    // KHI CHỌN "ALL" - LẤY CÂN BẰNG TỪ TẤT CẢ CÁC DANH MỤC
+    if (isAll) {
         std::map<Models::DestinationType, std::vector<ScoredPlace>> categorized;
 
         for (const auto& item : realDatabase) {
@@ -153,8 +165,6 @@ std::vector<Models::Location> PlaceService::SearchPlaces(
             });
         }
 
-        // Lấy luân phiên 3 địa điểm gần nhất của TỪNG danh mục:
-        // COFFEE (3), FOOD (3), ENTERTAINMENT (3), SHOPPING (3), STUDY (3), RELAX (3)
         std::vector<Models::DestinationType> allTypes = {
             Models::DestinationType::COFFEE,
             Models::DestinationType::FOOD,
@@ -184,10 +194,12 @@ std::vector<Models::Location> PlaceService::SearchPlaces(
         return results;
     }
 
-    // KHI CHỌN 1 LOẠI HÌNH CỤ THỂ
-    std::vector<ScoredPlace> candidates;
+    // KHI CHỌN MỘT HOẶC NHIỀU DANH MỤC CỤ THỂ (MULTI-CATEGORY SELECTION)
+    std::set<Models::DestinationType> typeSet(types.begin(), types.end());
+    std::map<Models::DestinationType, std::vector<ScoredPlace>> matchedGroups;
+
     for (const auto& item : realDatabase) {
-        if (item.type != type) {
+        if (typeSet.find(item.type) == typeSet.end()) {
             continue;
         }
 
@@ -199,27 +211,34 @@ std::vector<Models::Location> PlaceService::SearchPlaces(
         double distKm = distanceService.CalculateDistance(center, pPos);
         double distMeters = distKm * 1000.0;
 
-        candidates.push_back({ item, distMeters });
+        matchedGroups[item.type].push_back({ item, distMeters });
     }
 
-    std::sort(candidates.begin(), candidates.end(), [](const ScoredPlace& a, const ScoredPlace& b) {
-        return a.distMeters < b.distMeters;
-    });
+    // Sắp xếp địa điểm trong từng danh mục theo khoảng cách gần nhất
+    for (auto& pair : matchedGroups) {
+        std::sort(pair.second.begin(), pair.second.end(), [](const ScoredPlace& a, const ScoredPlace& b) {
+            return a.distMeters < b.distMeters;
+        });
+    }
 
-    for (const auto& c : candidates) {
-        results.push_back(Models::Location(
-            idCounter++,
-            c.item.name,
-            c.item.address,
-            Models::Position(c.item.lat, c.item.lon),
-            c.item.type,
-            c.item.price,
-            "node/" + std::to_string(idCounter)
-        ));
-
-        if (results.size() >= 16) {
-            break;
+    // Lấy luân phiên giữa các danh mục đã chọn để đảm bảo tất cả các topic đều có mặt
+    size_t maxPerCat = 8;
+    for (size_t pick = 0; pick < maxPerCat; pick++) {
+        for (auto t : types) {
+            if (matchedGroups[t].size() > pick) {
+                const auto& c = matchedGroups[t][pick];
+                results.push_back(Models::Location(
+                    idCounter++,
+                    c.item.name,
+                    c.item.address,
+                    Models::Position(c.item.lat, c.item.lon),
+                    c.item.type,
+                    c.item.price,
+                    "node/" + std::to_string(idCounter)
+                ));
+            }
         }
+        if (results.size() >= 24) break;
     }
 
     return results;
