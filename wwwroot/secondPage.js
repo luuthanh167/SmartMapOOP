@@ -1,9 +1,13 @@
 const params = new URLSearchParams(window.location.search);
 
-const userLocation = params.get("location") || "Đại học Công nghệ Kỹ thuật TP.HCM";
+const userLocation =
+  params.get("location") || "Đại học Công nghệ Kỹ thuật TP.HCM";
 const initialCategoryParam = params.get("category") || "all";
 const budget = params.get("budget") || "50000";
 const distance = params.get("distance") || "2";
+
+const maxBudget = parseFloat(budget) || 0;
+const maxDistance = parseFloat(distance) || 0;
 
 // Quản lý các danh mục đang được chọn (hỗ trợ chọn nhiều topic cùng 1 lúc)
 const selectedCategories = new Set();
@@ -44,9 +48,9 @@ const knownCoordinates = {
   "Đại học Công nghệ Kỹ thuật TP.HCM": [10.8498, 106.7713],
   "Đại học Sư phạm Kỹ thuật TP.HCM": [10.8506, 106.7719],
   "Vincom Plaza Lê Văn Việt": [10.8458, 106.7778],
-  "Làng Đại học Quốc gia TP.HCM": [10.8700, 106.8030],
-  "Đại học Văn Lang": [10.8275, 106.6990],
-  "Đại học Bách Khoa TP.HCM": [10.7720, 106.6578],
+  "Làng Đại học Quốc gia TP.HCM": [10.87, 106.803],
+  "Đại học Văn Lang": [10.8275, 106.699],
+  "Đại học Bách Khoa TP.HCM": [10.772, 106.6578],
 };
 
 let startLat = 10.8498;
@@ -78,7 +82,10 @@ const map = new maplibregl.Map({
   attributionControl: { compact: true },
 });
 
-map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
+map.addControl(
+  new maplibregl.NavigationControl({ showCompass: true }),
+  "bottom-right",
+);
 
 // Thêm Marker vị trí xuất phát phong cách Google Maps (Pulsing Blue Dot)
 function createStartMarker() {
@@ -211,6 +218,54 @@ map.on("load", function () {
   loadPlaces();
 });
 
+// Lọc nghiêm ngặt theo Budget, Distance và Sắp xếp Rating giảm dần (từ trái sang phải)
+function filterAndSortPlaces(places) {
+  if (!Array.isArray(places)) return [];
+
+  const filtered = places.filter(function (p) {
+    const pLat = parseFloat(p.latitude);
+    const pLon = parseFloat(p.longitude);
+    const distKm = calculateDistanceKm(startLat, startLon, pLat, pLon);
+
+    // Không được vượt quá khoảng cách cho phép
+    if (maxDistance > 0 && distKm > maxDistance + 0.01) {
+      return false;
+    }
+
+    // Không được vượt quá ngân sách cho phép (nếu địa điểm có tính phí > 0)
+    const price = parseFloat(p.price) || 0;
+    if (maxBudget > 0 && price > 0 && price > maxBudget) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Sắp xếp rating từ cao xuống thấp (từ trái sang phải)
+  filtered.sort(function (a, b) {
+    const ratingA = parseFloat(a.rating) || 4.5;
+    const ratingB = parseFloat(b.rating) || 4.5;
+    if (ratingB !== ratingA) {
+      return ratingB - ratingA;
+    }
+    const distA = calculateDistanceKm(
+      startLat,
+      startLon,
+      parseFloat(a.latitude),
+      parseFloat(a.longitude),
+    );
+    const distB = calculateDistanceKm(
+      startLat,
+      startLon,
+      parseFloat(b.latitude),
+      parseFloat(b.longitude),
+    );
+    return distA - distB;
+  });
+
+  return filtered;
+}
+
 // Tải tất cả địa điểm theo các topic đang được chọn
 function loadPlaces() {
   const catParam = selectedCategories.has("all")
@@ -228,7 +283,9 @@ function loadPlaces() {
     })
     .then(function (places) {
       if (Array.isArray(places) && places.length > 0) {
-        allPlaces = places;
+        allPlaces = filterAndSortPlaces(places);
+      } else if (Array.isArray(places) && places.length === 0) {
+        allPlaces = [];
       } else {
         allPlaces = getFilteredFallbackPlaces();
       }
@@ -288,7 +345,10 @@ function renderPlacesAndMarkers() {
       toggleSelectPlace(p);
     });
 
-    const marker = new maplibregl.Marker({ element: markerEl, anchor: "bottom" })
+    const marker = new maplibregl.Marker({
+      element: markerEl,
+      anchor: "bottom",
+    })
       .setLngLat([pLon, pLat])
       .addTo(map);
 
@@ -300,7 +360,8 @@ function renderPlacesAndMarkers() {
     const pLat = parseFloat(p.latitude);
     const pLon = parseFloat(p.longitude);
     const distKm = calculateDistanceKm(startLat, startLon, pLat, pLon);
-    const distText = distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`;
+    const distText =
+      distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${distKm.toFixed(1)} km`;
 
     const icon = getCategoryIcon(p.type);
     const catLabel = getCategoryLabel(p.type);
@@ -309,9 +370,10 @@ function renderPlacesAndMarkers() {
     card.className = "place-card";
     card.dataset.name = p.name;
 
-    const priceText = p.price && p.price > 0
-      ? Number(p.price).toLocaleString("vi-VN") + " đ"
-      : (p.address || "Gần bạn");
+    const priceText =
+      p.price && p.price > 0
+        ? Number(p.price).toLocaleString("vi-VN") + " đ"
+        : p.address || "Gần bạn";
 
     card.innerHTML = `
       <div class="place-icon">${icon}</div>
@@ -322,7 +384,7 @@ function renderPlacesAndMarkers() {
           <span class="place-type-badge">${catLabel}</span>
         </div>
         <div class="place-meta">
-          <span class="place-rating">⭐ 4.5</span>
+          <span class="place-rating">⭐ ${p.rating ? Number(p.rating).toFixed(1) : "4.5"}</span>
           <span class="place-distance">📍 ${distText}</span>
         </div>
       </div>
@@ -363,14 +425,36 @@ function showToast(message) {
 // Hàm chọn / bỏ chọn địa điểm (hỗ trợ chọn từ 1 đến 10 điểm dừng)
 function toggleSelectPlace(place) {
   const existingIndex = selectedPlaces.findIndex(function (p) {
-    return p.name === place.name ||
-      (Math.abs(p.latitude - place.latitude) < 0.0001 && Math.abs(p.longitude - place.longitude) < 0.0001);
+    return (
+      p.name === place.name ||
+      (Math.abs(p.latitude - place.latitude) < 0.0001 &&
+        Math.abs(p.longitude - place.longitude) < 0.0001)
+    );
   });
 
   if (existingIndex !== -1) {
     // Đã chọn -> Bỏ chọn
     selectedPlaces.splice(existingIndex, 1);
   } else {
+    // Kiểm tra không vượt quá khoảng cách và ngân sách của người dùng
+    const pLat = parseFloat(place.latitude);
+    const pLon = parseFloat(place.longitude);
+    const distKm = calculateDistanceKm(startLat, startLon, pLat, pLon);
+    if (maxDistance > 0 && distKm > maxDistance + 0.01) {
+      showToast(
+        `⚠️ Địa điểm vượt quá khoảng cách cho phép (${maxDistance} km)!`,
+      );
+      return;
+    }
+
+    const price = parseFloat(place.price) || 0;
+    if (maxBudget > 0 && price > 0 && price > maxBudget) {
+      showToast(
+        `⚠️ Địa điểm vượt quá ngân sách cho phép (${Number(maxBudget).toLocaleString("vi-VN")} đ)!`,
+      );
+      return;
+    }
+
     // Chưa chọn -> Kiểm tra giới hạn tối đa 10 điểm dừng
     if (selectedPlaces.length >= 10) {
       showToast("⚠️ Bạn chỉ có thể chọn tối đa 10 điểm dừng liên tiếp!");
@@ -384,6 +468,7 @@ function toggleSelectPlace(place) {
       address: place.address,
       price: place.price,
       type: place.type,
+      rating: place.rating,
     });
 
     // Bay nhẹ tới địa điểm vừa chọn
@@ -434,8 +519,11 @@ function updateSelectionUI() {
   // 1. Cập nhật Marker trên bản đồ
   placeMarkers.forEach(function (m) {
     const selIdx = selectedPlaces.findIndex(function (p) {
-      return p.name === m.data.name ||
-        (Math.abs(p.latitude - m.data.latitude) < 0.0001 && Math.abs(p.longitude - m.data.longitude) < 0.0001);
+      return (
+        p.name === m.data.name ||
+        (Math.abs(p.latitude - m.data.latitude) < 0.0001 &&
+          Math.abs(p.longitude - m.data.longitude) < 0.0001)
+      );
     });
     const pinEl = m.element.querySelector(".marker-pin");
 
@@ -543,10 +631,12 @@ function renderWaypointsBar() {
       <span class="waypoint-chip-remove" title="Bỏ chọn điểm này">✕</span>
     `;
 
-    chip.querySelector(".waypoint-chip-remove").addEventListener("click", function (e) {
-      e.stopPropagation();
-      removeSelectedPlace(p.name);
-    });
+    chip
+      .querySelector(".waypoint-chip-remove")
+      .addEventListener("click", function (e) {
+        e.stopPropagation();
+        removeSelectedPlace(p.name);
+      });
 
     selectedWaypointsBar.appendChild(chip);
   });
@@ -578,7 +668,9 @@ recenterBtn.addEventListener("click", function () {
   if (allPlaces.length === 0) return;
   const bounds = new maplibregl.LngLatBounds();
   bounds.extend([startLon, startLat]);
-  allPlaces.forEach((p) => bounds.extend([parseFloat(p.longitude), parseFloat(p.latitude)]));
+  allPlaces.forEach((p) =>
+    bounds.extend([parseFloat(p.longitude), parseFloat(p.latitude)]),
+  );
   map.fitBounds(bounds, {
     padding: { top: 90, bottom: 220, left: 60, right: 60 },
     maxZoom: 16,
@@ -655,12 +747,15 @@ function findRoute() {
   if (selectedPlaces.length === 0) return;
 
   const count = selectedPlaces.length;
-  mapLoadingText.textContent = count === 1
-    ? `Đang tìm đường ngắn nhất đến ${selectedPlaces[0].name}...`
-    : `Đang tìm đường đi ngắn nhất qua ${count} điểm liên tiếp...`;
+  mapLoadingText.textContent =
+    count === 1
+      ? `Đang tìm đường ngắn nhất đến ${selectedPlaces[0].name}...`
+      : `Đang tìm đường đi ngắn nhất qua ${count} điểm liên tiếp...`;
   mapLoading.style.display = "flex";
 
-  const isOptimize = optimizeOrderCheckbox ? optimizeOrderCheckbox.checked : true;
+  const isOptimize = optimizeOrderCheckbox
+    ? optimizeOrderCheckbox.checked
+    : true;
 
   const waypointsPayload = selectedPlaces.map(function (p) {
     return {
@@ -707,13 +802,24 @@ function findRoute() {
         const waypointsList = data.orderedWaypoints || selectedPlaces;
         const coordsStr = [
           `${startLon},${startLat}`,
-          ...waypointsList.map(function (p) { return `${p.longitude},${p.latitude}`; })
+          ...waypointsList.map(function (p) {
+            return `${p.longitude},${p.latitude}`;
+          }),
         ].join(";");
 
-        fetch(`https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`)
-          .then(function (res) { return res.json(); })
+        fetch(
+          `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`,
+        )
+          .then(function (res) {
+            return res.json();
+          })
           .then(function (osrm) {
-            if (osrm.routes && osrm.routes.length > 0 && osrm.routes[0].geometry && osrm.routes[0].geometry.coordinates) {
+            if (
+              osrm.routes &&
+              osrm.routes.length > 0 &&
+              osrm.routes[0].geometry &&
+              osrm.routes[0].geometry.coordinates
+            ) {
               const realStreetCoords = osrm.routes[0].geometry.coordinates;
               drawRoute(realStreetCoords);
               fitRoute(realStreetCoords);
@@ -725,7 +831,10 @@ function findRoute() {
       }
 
       // Nếu backend đã tối ưu thứ tự ghé thăm (TSP), cập nhật lại thứ tự selectedPlaces
-      if (Array.isArray(data.orderedWaypoints) && data.orderedWaypoints.length > 1) {
+      if (
+        Array.isArray(data.orderedWaypoints) &&
+        data.orderedWaypoints.length > 1
+      ) {
         const reordered = [];
         data.orderedWaypoints.forEach(function (ow) {
           const match = selectedPlaces.find(function (sp) {
@@ -824,15 +933,17 @@ function getDefaultFallbackPlaces() {
       longitude: startLon + 0.0067,
       type: "COFFEE",
       price: 49000,
+      rating: 4.8,
     },
     {
       id: 2,
       name: "Highlands Coffee - Vincom Plaza",
       address: "Vincom Plaza Lê Văn Việt",
-      latitude: startLat - 0.0040,
+      latitude: startLat - 0.004,
       longitude: startLon + 0.0065,
       type: "COFFEE",
       price: 45000,
+      rating: 4.6,
     },
     {
       id: 3,
@@ -842,6 +953,7 @@ function getDefaultFallbackPlaces() {
       longitude: startLon + 0.0048,
       type: "COFFEE",
       price: 55000,
+      rating: 4.9,
     },
     {
       id: 4,
@@ -851,6 +963,7 @@ function getDefaultFallbackPlaces() {
       longitude: startLon - 0.0041,
       type: "FOOD",
       price: 75000,
+      rating: 4.6,
     },
     {
       id: 5,
@@ -860,6 +973,7 @@ function getDefaultFallbackPlaces() {
       longitude: startLon + 0.0066,
       type: "FOOD",
       price: 65000,
+      rating: 4.5,
     },
     {
       id: 6,
@@ -869,6 +983,7 @@ function getDefaultFallbackPlaces() {
       longitude: startLon + 0.0068,
       type: "ENTERTAINMENT",
       price: 95000,
+      rating: 4.9,
     },
     {
       id: 7,
@@ -878,15 +993,17 @@ function getDefaultFallbackPlaces() {
       longitude: startLon - 0.0001,
       type: "ENTERTAINMENT",
       price: 70000,
+      rating: 4.4,
     },
     {
       id: 8,
       name: "Vincom Plaza Lê Văn Việt",
       address: "50 Lê Văn Việt, Hiệp Phú, TP. Thủ Đức",
-      latitude: startLat - 0.0040,
+      latitude: startLat - 0.004,
       longitude: startLon + 0.0065,
       type: "SHOPPING",
       price: 0,
+      rating: 4.8,
     },
     {
       id: 9,
@@ -896,15 +1013,17 @@ function getDefaultFallbackPlaces() {
       longitude: startLon - 0.0128,
       type: "SHOPPING",
       price: 0,
+      rating: 4.7,
     },
     {
       id: 10,
       name: "Thư viện ĐH Sư phạm Kỹ thuật",
       address: "Tòa nhà Trung tâm, 1 Võ Văn Ngân",
-      latitude: startLat + 0.0010,
+      latitude: startLat + 0.001,
       longitude: startLon + 0.0007,
       type: "STUDY",
       price: 0,
+      rating: 4.8,
     },
     {
       id: 11,
@@ -914,6 +1033,7 @@ function getDefaultFallbackPlaces() {
       longitude: startLon - 0.0023,
       type: "STUDY",
       price: 30000,
+      rating: 4.7,
     },
     {
       id: 12,
@@ -923,14 +1043,17 @@ function getDefaultFallbackPlaces() {
       longitude: startLon + 0.0297,
       type: "RELAX",
       price: 0,
+      rating: 4.6,
     },
   ];
 }
 
 function getFilteredFallbackPlaces() {
   const list = getDefaultFallbackPlaces();
-  if (selectedCategories.has("all")) return list;
-  return list.filter(function (p) {
-    return selectedCategories.has((p.type || "").toUpperCase());
-  });
+  const byCat = selectedCategories.has("all")
+    ? list
+    : list.filter(function (p) {
+        return selectedCategories.has((p.type || "").toUpperCase());
+      });
+  return filterAndSortPlaces(byCat);
 }
