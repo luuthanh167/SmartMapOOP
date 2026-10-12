@@ -4,7 +4,7 @@ namespace SmartMap {
 namespace Models {
 
 Location::Location()
-    : id(0), name(""), address(""), position(), type(DestinationType::COFFEE), price(0.0), placeId("") {}
+    : id(0), name(""), address(""), position(), type(DestinationType::COFFEE), price(0.0), placeId(""), rating(4.5) {}
 
 Location::Location(int id,
                    const std::string& name,
@@ -12,14 +12,16 @@ Location::Location(int id,
                    const Position& position,
                    DestinationType type,
                    double price,
-                   const std::string& placeId)
+                   const std::string& placeId,
+                   double rating)
     : id(id),
       name(name),
       address(address),
       position(position),
       type(type),
       price(price),
-      placeId(placeId) {}
+      placeId(placeId),
+      rating(rating) {}
 
 int Location::GetId() const {
     return id;
@@ -47,6 +49,10 @@ double Location::GetPrice() const {
 
 std::string Location::GetPlaceId() const {
     return placeId;
+}
+
+double Location::GetRating() const {
+    return rating;
 }
 
 } // namespace Models

@@ -314,7 +314,8 @@ void HttpServer::HandleGetPlaces(const std::string& queryString, uintptr_t clien
         json << "    \"latitude\": " << std::fixed << std::setprecision(6) << p.GetPosition().GetLatitude() << ",\n";
         json << "    \"longitude\": " << std::fixed << std::setprecision(6) << p.GetPosition().GetLongitude() << ",\n";
         json << "    \"type\": \"" << Models::DestinationTypeToString(p.GetType()) << "\",\n";
-        json << "    \"price\": " << std::fixed << std::setprecision(0) << p.GetPrice() << "\n";
+        json << "    \"price\": " << std::fixed << std::setprecision(0) << p.GetPrice() << ",\n";
+        json << "    \"rating\": " << std::fixed << std::setprecision(1) << p.GetRating() << "\n";
         json << "  }" << (i + 1 < places.size() ? ",\n" : "\n");
     }
     json << "]";

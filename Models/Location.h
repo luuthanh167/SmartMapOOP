@@ -15,6 +15,7 @@ private:
     DestinationType type;
     double price;
     std::string placeId;
+    double rating;
 
 public:
     Location();
@@ -24,7 +25,8 @@ public:
              const Position& position,
              DestinationType type,
              double price,
-             const std::string& placeId);
+             const std::string& placeId,
+             double rating = 4.5);
 
     int GetId() const;
     std::string GetName() const;
@@ -33,6 +35,7 @@ public:
     DestinationType GetType() const;
     double GetPrice() const;
     std::string GetPlaceId() const;
+    double GetRating() const;
 };
 
 } // namespace Models

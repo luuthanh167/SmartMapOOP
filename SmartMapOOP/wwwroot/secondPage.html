@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Map - Khám phá & Chỉ đường</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="secondPage.css" />
+  </head>
+
+  <body>
+    <div class="page">
+      <!-- MAP SECTION -->
+      <div class="map-section">
+        <!-- Floating Google-style Top Bar -->
+        <div class="top-nav-bar">
+          <button id="backButton" class="back-btn" title="Quay lại">
+            <span class="back-icon">←</span>
+            <span>Quay lại</span>
+          </button>
+
+          <div class="search-summary">
+            <div class="summary-title" id="summaryTitle">🗺️ Smart Map</div>
+            <div class="summary-sub" id="searchInfo">Đang tìm địa điểm quanh bạn...</div>
+          </div>
+
+          <div class="places-count-badge" id="placesCountBadge">
+            0 địa điểm
+          </div>
+        </div>
+
+        <!-- Floating Route Info Banner (hiện khi đã tìm đường) -->
+        <div id="routeBanner" class="route-banner" style="display: none;">
+          <div class="route-banner-icon">🚗</div>
+          <div class="route-banner-content">
+            <div class="route-banner-title" id="routeBannerTitle">Lộ trình ngắn nhất</div>
+            <div class="route-banner-details" id="routeBannerDetails">-- km • -- phút</div>
+            <div class="route-banner-legs" id="routeBannerLegs" style="display: none;"></div>
+          </div>
+          <button id="closeBannerBtn" class="close-banner-btn" title="Đóng">✕</button>
+        </div>
+
+        <!-- Bản đồ MapLibre -->
+        <div id="map"></div>
+
+        <!-- Trạng thái đang tải -->
+        <div id="mapLoading" class="map-loading" style="display: none;">
+          <div class="spinner"></div>
+          <span id="mapLoadingText">Đang tìm đường đi ngắn nhất...</span>
+        </div>
+
+        <!-- Nút Reset căn chỉnh lại toàn bộ bản đồ -->
+        <button id="recenterBtn" class="recenter-btn" title="Xem toàn bộ địa điểm">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="7"></circle>
+            <line x1="12" y1="1" x2="12" y2="5"></line>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="1" y1="12" x2="5" y2="12"></line>
+            <line x1="19" y1="12" x2="23" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- BOTTOM RESULTS SECTION -->
+      <div class="results-section">
+        <div class="results-header">
+          <div class="results-title-box">
+            <div class="results-title">Địa điểm gợi ý quanh bạn</div>
+            <div class="results-subtitle">Nhấp chọn từ 1 đến 5 địa điểm đa dạng loại hình để tìm lộ trình tối ưu</div>
+          </div>
+
+          <div class="results-actions">
+            <label class="tsp-toggle" title="Thuật toán Toán rời rạc: Tìm hoán vị có tổng đường đi ngắn nhất xuất phát từ bạn">
+              <input type="checkbox" id="optimizeOrderCheckbox" checked />
+              <span class="tsp-toggle-label">⚡ Tối ưu đường ngắn nhất (TSP)</span>
+            </label>
+
+            <button id="clearSelectionBtn" class="clear-btn" style="display: none;" title="Xóa các điểm đã chọn">
+              ✕ Bỏ chọn
+            </button>
+
+            <button id="routeButton" class="route-button" disabled>
+              <span class="route-btn-icon">➤</span>
+              <span id="routeBtnText">CHỌN 1-5 ĐỊA ĐIỂM</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thanh lọc theo từng loại hình nhanh chóng -->
+        <div class="category-filter-bar" id="categoryFilterBar">
+          <button class="filter-tab active" data-cat="all">🌟 Tất cả các loại</button>
+          <button class="filter-tab" data-cat="COFFEE">☕ Cà phê</button>
+          <button class="filter-tab" data-cat="FOOD">🍜 Ẩm thực</button>
+          <button class="filter-tab" data-cat="ENTERTAINMENT">🎮 Giải trí</button>
+          <button class="filter-tab" data-cat="SHOPPING">🛍️ Mua sắm</button>
+          <button class="filter-tab" data-cat="STUDY">📚 Học tập</button>
+          <button class="filter-tab" data-cat="RELAX">🌳 Thư giãn</button>
+        </div>
+
+        <!-- Thanh danh sách các điểm dừng đã chọn -->
+        <div id="selectedWaypointsBar" class="selected-waypoints-bar" style="display: none;">
+          <!-- Waypoint chips rendered via JS -->
+        </div>
+
+        <div id="placesList" class="places-list">
+          <!-- Dynamic place cards will be inserted here -->
+          <div class="loading-placeholder">Đang tải danh sách địa điểm...</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+    <script src="secondPage.js"></script>
+  </body>
+</html>
